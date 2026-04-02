@@ -1,0 +1,38 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "HR Management System - Backend",
+  "private": true,
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "build": "echo 'No build step required for JavaScript'",
+    "lint": "eslint src --ext js",
+    "test": "vitest",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:seed": "node prisma/seed.cjs"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "dotenv": "^16.4.0",
+    "@prisma/client": "^5.10.0",
+    "joi": "^17.12.0",
+    "morgan": "^1.10.0",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0",
+    "prisma": "^5.10.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.0",
+    "vitest": "^1.4.0"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.cjs"
+  }
+}
