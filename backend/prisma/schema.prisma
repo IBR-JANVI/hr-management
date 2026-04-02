@@ -9,16 +9,17 @@ datasource db {
 
 // User Model
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String     @id @default(uuid())
+  email     String     @unique
   name      String?
   password  String
   status    UserStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   // Relations
-  roles     UserRole[]
+  roles         UserRole[]
+  refreshTokens RefreshToken[]
 
   @@map("users")
 }
@@ -31,13 +32,13 @@ enum UserStatus {
 
 // Role Model
 model Role {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String?
-  isDefault   Boolean  @default(false)
-  isSuperAdmin Boolean @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(uuid())
+  name         String   @unique
+  description  String?
+  isDefault    Boolean  @default(false)
+  isSuperAdmin Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
   permissions RolePermission[]
@@ -52,14 +53,13 @@ model Permission {
   module    String
   action    String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   roles RolePermission[]
 
-  @@map("permissions")
-
   @@unique([module, action])
+  @@map("permissions")
 }
 
 // User-Role Many-to-Many
@@ -70,11 +70,11 @@ model UserRole {
   createdAt DateTime @default(now())
 
   // Relations
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  @@map("user_roles")
   @@unique([userId, roleId])
+  @@map("user_roles")
 }
 
 // Role-Permission Many-to-Many
@@ -88,8 +88,8 @@ model RolePermission {
   role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-  @@map("role_permissions")
   @@unique([roleId, permissionId])
+  @@map("role_permissions")
 }
 
 // Refresh Token Model
@@ -99,6 +99,9 @@ model RefreshToken {
   userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
 }
