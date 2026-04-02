@@ -1,0 +1,692 @@
+# =============================================================================
+# CodeRabbit Configuration – Inventory Management System
+# =============================================================================
+# This file enforces structured coding standards across the entire monorepo.
+# Every rule here exists because the codebase depends on it. Do not weaken
+# or remove rules without team consensus.
+#
+# Stack: MERN (MongoDB + Express + React 19 + Node.js 18+)
+# Architecture: Monorepo with backend/ and frontend/ workspaces
+# =============================================================================
+
+language: en-US
+
+reviews:
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  collapse_walkthrough: false
+  sequence_diagrams: true
+  changed_files_summary: true
+  labeling_instructions: []
+  path_filters: []
+  abort_on_close: true
+  auto_review:
+    enabled: true
+    ignore_title_keywords:
+      - WIP
+      - DO NOT MERGE
+      - DRAFT
+    drafts: false
+    base_branches:
+      - main
+      - janvi_main
+      - nick_main
+
+  path_instructions:
+    # ===========================================================================
+    # GLOBAL – applies to every file in the repo
+    # ===========================================================================
+    - path: "**/*"
+      instructions: |
+        GLOBAL RULES – enforce on every file regardless of location:
+
+        1. **Max file length: 500 lines.** If a file exceeds 500 lines, request
+           the author to split it by functionality. Components > 250 lines should
+           extract sub-components. Services > 300 lines should split by sub-domain.
+           Utility files > 150 lines should split by function group.
+
+        2. **No `console.log` / `console.warn` / `console.error`.** Backend must
+           use the Winston logger (`require('../config/logger')`). Frontend must
+           never ship console statements. The only exception is a startup log
+           before the logger is initialized, which must have an inline eslint-disable
+           comment with justification.
+
+        3. **No hardcoded secrets.** Flag any string that looks like a password,
+           API key, token, connection string, or secret. These belong in environment
+           variables loaded via `config/env.js` (backend) or `REACT_APP_*` vars
+           (frontend). Never commit `.env` files — only `.env.example`.
+
+        4. **No dead / commented-out code.** Git has history. If code is commented
+           out, request its removal. The only acceptable comments are TODOs with a
+           ticket number (e.g., `// TODO(HP-456): ...`).
+
+        5. **Every async function must have error handling.** Backend async route
+           handlers must be wrapped with `catchAsync`. Services must throw
+           `AppError` for operational errors. Frontend async calls must use
+           try/catch with meaningful error state or toast notification.
+
+        6. **Descriptive variable names only.** Flag single-letter variables
+           (except `i`, `j`, `k` in loops, `e` in catch, `_` for unused params),
+           abbreviations, or names that don't convey intent. Boolean variables
+           must be prefixed with `is`, `has`, `can`, or `should`.
+
+        7. **No magic numbers or strings.** Literal values must be extracted into
+           named constants. Use UPPER_SNAKE_CASE for true constants.
+
+        8. **Use `const` by default.** Only use `let` when reassignment is needed.
+           Never use `var`.
+
+        9. **Strict equality only.** Always use `===` and `!==`. Flag `==` and `!=`.
+
+        10. **No `eval()`, `new Function()`, or `dangerouslySetInnerHTML`** unless
+            there is a documented security justification and DOMPurify sanitization.
+
+        11. **Imports must be grouped and ordered** with blank lines between groups:
+            (1) Node built-ins, (2) third-party, (3) internal config/middleware,
+            (4) models, (5) services, (6) utils, (7) styles/assets.
+
+        12. **No barrel index files** that re-export everything from a directory.
+            Individual component index.js re-exports are fine.
+
+        13. **Prettier formatting** must be applied: single quotes, semicolons,
+            trailing commas (es5), 100 char print width, 2-space indent,
+            arrow parens always.
+
+        14. **No inline ESLint disables without a justification comment** explaining
+            why the rule is disabled for that line.
+
+        15. **No TODO comments without a ticket number or author tag.**
+            Pattern: `// TODO(HP-XXX): description` or `// TODO(@username): description`.
+
+    # ===========================================================================
+    # BACKEND – Express / Node.js API
+    # ===========================================================================
+
+    - path: "backend/**/*"
+      instructions: |
+        BACKEND GENERAL RULES:
+
+        1. **CommonJS only.** Backend uses `require()` / `module.exports`.
+           Do not use ES module `import` / `export` syntax.
+
+        2. **Never read `process.env` directly.** Always use `getConfig()` from
+           `src/config/env.js`. All new env vars must be added to `env.js`
+           (with defaults where appropriate) and to `.env.example`.
+
+        3. **Every file must have a JSDoc `@module` header** describing the
+           module's purpose, matching the existing pattern in the codebase.
+
+        4. **Node.js >= 18 required.** Do not use APIs deprecated in Node 18+
+           or polyfills for features available natively.
+
+    - path: "backend/src/models/**/*"
+      instructions: |
+        MODELS RULES (Mongoose schemas and models):
+
+        1. **One model per file.** File naming: `PascalCase.model.js`
+           (e.g., `Candidate.model.js`).
+
+        2. **Always enable `timestamps: true`** in schema options.
+
+        3. **Schema fields use camelCase.** Never use snake_case field names.
+
+        4. **Required fields must use the object form** with a custom error message:
+           `required: [true, 'Field name is required']`.
+
+        5. **Enums must use the `enum` validator** with a `message` property and
+           explicit `values` array.
+
+        6. **String fields should have `trim: true`** and a `maxlength` validator.
+
+        7. **Email fields must have `lowercase: true`, `trim: true`, `unique: true`.**
+
+        8. **References use `Schema.Types.ObjectId` with a `ref`.**
+
+        9. **Indexes must be defined in the schema file**, not in migration scripts.
+
+        10. **Soft deletes use a `deletedAt` field** (`{ type: Date, default: null }`).
+
+        11. **Export the model as default export:**
+            `module.exports = mongoose.model('ModelName', schema);`
+
+        12. **If a model file exceeds 200 lines,** extract helper logic into the
+            services layer.
+
+        13. **Sensitive fields like `password` must use `select: false`** in the
+            schema definition so they are excluded from queries by default.
+
+    - path: "backend/src/controllers/**/*"
+      instructions: |
+        CONTROLLERS RULES:
+
+        1. **File naming: `camelCase.controller.js`** (e.g., `candidate.controller.js`).
+
+        2. **Controllers must be thin.** They may only:
+           - Extract data from `req.params`, `req.body`, `req.query`.
+           - Call a service function.
+           - Send the response using `ApiResponse.success()` or `ApiResponse.error()`.
+
+        3. **No business logic in controllers.** No direct Mongoose queries, no
+           data transformation, no conditional business rules. All of that goes
+           in services.
+
+        4. **Every handler must be wrapped with `catchAsync`:**
+           ```js
+           const getById = catchAsync(async (req, res) => { ... });
+           ```
+
+        5. **Use the standardized `ApiResponse` helper** for all responses.
+           201 for creation, 200 for success, let errors propagate to the
+           error handler.
+
+        6. **One controller file per resource.** Each exports an object or
+           individual named functions for each operation (list, getById,
+           create, update, patch, remove).
+
+    - path: "backend/src/services/**/*"
+      instructions: |
+        SERVICES RULES (business logic layer):
+
+        1. **File naming: `camelCase.service.js`** (e.g., `candidate.service.js`).
+
+        2. **Services own all business logic and database interactions.**
+           Controllers call services; services call models.
+
+        3. **Services must be independently testable.** No dependency on `req`
+           or `res` objects. Accept plain parameters, return plain data or
+           throw errors.
+
+        4. **Throw `AppError` for operational errors** with appropriate HTTP
+           status codes (400, 401, 403, 404, 409).
+
+        5. **Never swallow errors silently.** Every catch block must log,
+           re-throw, or return a meaningful error.
+
+        6. **Use `.lean()` for read-only queries** where Mongoose document
+           methods are not needed.
+
+        7. **Use `.select()` to return only needed fields.** Never fetch
+           entire documents if only a subset is required.
+
+        8. **All list operations must be paginated.** Default 20, max 100.
+           Use the pagination utility.
+
+        9. **Avoid N+1 queries.** Use `.populate()` or `$lookup` aggregation.
+
+        10. **Public service functions must have JSDoc** with `@param`,
+            `@returns`, and `@throws` annotations.
+
+        11. **Services can call other services** for cross-resource logic, but
+            avoid circular dependencies.
+
+    - path: "backend/src/routes/**/*"
+      instructions: |
+        ROUTES RULES:
+
+        1. **File naming: `camelCase.routes.js`** (e.g., `candidate.routes.js`).
+
+        2. **Routes must contain zero logic.** Only map HTTP methods to
+           controller functions and attach middleware (auth, validation).
+
+        3. **Pattern: `router.<method>(path, ...middleware, controller.method)`.**
+
+        4. **Every route must have validation middleware** for request bodies
+           (POST, PUT, PATCH). Use the `validate()` wrapper with
+           express-validator chains.
+
+        5. **Protected routes must use `protect` middleware.** Role-restricted
+           routes must use `restrictTo('role1', 'role2')` after `protect`.
+
+        6. **New route files must be registered in `routes/index.js`** with
+           their base path.
+
+        7. **Resource paths use plural nouns in kebab-case:**
+           `/candidates`, `/job-postings`, `/interview-rounds`.
+
+        8. **No verbs in URLs.** The HTTP method is the verb.
+
+        9. **Nesting limited to one level.** Use query param filtering for
+           deeper relationships.
+
+    - path: "backend/src/middleware/**/*"
+      instructions: |
+        MIDDLEWARE RULES:
+
+        1. **File naming: `camelCase.js`** (e.g., `auth.js`, `errorHandler.js`).
+
+        2. **Each file exports one middleware or a small group of related
+           middleware.** Do not bundle unrelated concerns.
+
+        3. **Middleware must call `next()` OR send a response. Never both.**
+
+        4. **Error-handling middleware must have exactly 4 parameters:**
+           `(err, req, res, next)`.
+
+        5. **The global error handler (`errorHandler.js`) must be the last
+           middleware registered in `app.js`.** Never register route handlers
+           after it.
+
+        6. **Auth middleware must:**
+           - Extract Bearer token from the Authorization header.
+           - Verify using `jwt.verify()` with the secret from `getConfig()`.
+           - Attach decoded payload to `req.user`.
+           - Return 401 for missing/invalid tokens, 403 for insufficient roles.
+
+    - path: "backend/src/validations/**/*"
+      instructions: |
+        VALIDATIONS RULES:
+
+        1. **File naming: `camelCase.validation.js`** (e.g., `candidate.validation.js`).
+
+        2. **Use express-validator chains** passed through the `validate()` wrapper
+           from `middleware/validate.js`.
+
+        3. **Export an object keyed by operation:** `{ create, update, listQuery }`.
+
+        4. **Every field that accepts user input must be validated:**
+           type checks, length limits, enum constraints, required checks.
+
+        5. **Sanitize inputs:** use `.trim()`, `.escape()`, `.normalizeEmail()`
+           where appropriate.
+
+        6. **Custom error messages are required** for every validation rule.
+           Use `.withMessage('Human-readable message')`.
+
+        7. **Validate ObjectId params** using `.isMongoId()` with a message.
+
+    - path: "backend/src/config/**/*"
+      instructions: |
+        CONFIG RULES:
+
+        1. **Each concern gets its own file:** `db.js`, `env.js`, `logger.js`.
+
+        2. **`env.js` is the single source of truth** for all environment
+           variables. Add new vars to `requiredVars` or `defaults` as needed.
+           Also update `.env.example`.
+
+        3. **Logger must use Winston** with structured logging. JSON format in
+           production, colorized dev format otherwise.
+
+        4. **Database connection must have retry logic** with configurable
+           max retries and delay.
+
+        5. **No hardcoded connection strings, ports, or secrets.** Everything
+           comes from environment variables via `getConfig()`.
+
+    - path: "backend/src/utils/**/*"
+      instructions: |
+        BACKEND UTILS RULES:
+
+        1. **File naming: `camelCase.js`** (e.g., `catchAsync.js`, `ApiResponse.js`).
+
+        2. **Utils must be pure functions with no side effects.** If a utility
+           depends on a model or service, it belongs in the services layer.
+
+        3. **Every utility function must have JSDoc** with `@param`, `@returns`,
+           and `@example`.
+
+        4. **Use the `ApiResponse` class** for standardized responses:
+           `ApiResponse.success(res, message, data, statusCode)` and
+           `ApiResponse.error(res, message, statusCode, errors)`.
+
+        5. **`catchAsync` must wrap all async Express handlers.** Do not use
+           raw try/catch in route handlers.
+
+    - path: "backend/tests/**/*"
+      instructions: |
+        BACKEND TEST RULES:
+
+        1. **File naming: `<original>.test.js`** mirroring the src/ structure.
+
+        2. **Test naming pattern:** `should <expected behavior> when <condition>`.
+
+        3. **Use AAA pattern:** Arrange, Act, Assert — with clear separation.
+
+        4. **Unit tests** for services, utils, and middleware.
+           **Integration tests** for API endpoints using supertest.
+
+        5. **Tests must be independent.** No shared mutable state between tests.
+           Use `beforeEach` for setup and `afterEach` for cleanup.
+
+        6. **Coverage targets:** 70% statements, 60% branches, 70% functions,
+           70% lines minimum. New code should aim for 80%+.
+
+        7. **Do not test third-party library internals** or simple passthrough
+           functions with no logic.
+
+        8. **Integration tests must use a real test database**, not mocks, for
+           database interactions.
+
+    # ===========================================================================
+    # FRONTEND – React Application
+    # ===========================================================================
+
+    - path: "frontend/**/*"
+      instructions: |
+        FRONTEND GENERAL RULES:
+
+        1. **ES Modules only.** Frontend uses `import` / `export`.
+
+        2. **React 19 with functional components only.** No class components.
+
+        3. **Props must be destructured in the function signature:**
+           `function Component({ prop1, prop2 }) {}`.
+
+        4. **Event handler props: prefix with `on`.** Handler functions: prefix
+           with `handle`. Render helpers: prefix with `render`.
+
+        5. **No direct fetch/axios calls in components or hooks.** All API
+           communication goes through `src/api/` functions.
+
+        6. **CSS custom properties from `styles/variables.css`** must be used for
+           colors, spacing, typography, shadows, radii, and z-index. No hardcoded
+           color values or pixel sizes outside the design tokens.
+
+        7. **Accessibility: WCAG 2.1 Level AA minimum.**
+           - Semantic HTML (`<button>` for actions, `<a>` for navigation).
+           - Every `<img>` has `alt`. Decorative images use `alt=""`.
+           - Every form input has an associated `<label>`.
+           - Keyboard navigable. No `<div onClick>` without role and keyboard handler.
+           - Color contrast ratio >= 4.5:1 for text.
+           - Focus indicators must never be removed without a visible alternative.
+
+    - path: "frontend/src/components/**/*"
+      instructions: |
+        COMPONENTS RULES:
+
+        1. **File naming: `PascalCase.jsx`** (e.g., `CandidateCard.jsx`).
+
+        2. **Components must be reusable across pages.** Page-specific components
+           belong in the page's directory.
+
+        3. **Co-locate related files:** If a component needs styles and tests,
+           use a folder with `Component.jsx`, `Component.module.css`,
+           `Component.test.js`, and `index.js` re-export.
+
+        4. **Max 250 lines per component file.** Extract sub-components if exceeded.
+
+        5. **No data fetching in components.** Use hooks or page-level data loading.
+
+        6. **Use CSS Modules** (`Component.module.css`) for component-scoped styles.
+           Use CSS custom properties from `variables.css` for design tokens.
+
+        7. **All interactive elements must be keyboard accessible.**
+
+    - path: "frontend/src/pages/**/*"
+      instructions: |
+        PAGES RULES:
+
+        1. **File naming: `PascalCase.jsx`** (e.g., `Dashboard.jsx`).
+
+        2. **One directory per page/route.** Contains the page component and
+           any sub-components used only by that page.
+
+        3. **Each page directory must have an `index.js` re-export** for clean
+           imports.
+
+        4. **Pages orchestrate data loading** (via hooks or direct API calls
+           wrapped in useEffect). Pass data down to child components via props.
+
+        5. **Loading, error, and empty states must be handled explicitly.**
+           Use `aria-busy="true"` for loading containers.
+
+    - path: "frontend/src/hooks/**/*"
+      instructions: |
+        HOOKS RULES:
+
+        1. **File naming: `useCamelCase.js`** (e.g., `usePagination.js`,
+           `useDebounce.js`).
+
+        2. **Custom hooks must start with `use`.** This is a React requirement.
+
+        3. **Hooks here must be generic and reusable.** Feature-specific hooks
+           live next to their feature (in pages/ or components/).
+
+        4. **Dependency arrays must be complete.** Flag any `useEffect`,
+           `useMemo`, or `useCallback` with missing dependencies.
+
+        5. **Cleanup side effects.** Hooks with subscriptions, timers, or event
+           listeners must return cleanup functions.
+
+        6. **Debounce API calls.** Search inputs must use >= 300ms debounce.
+
+    - path: "frontend/src/contexts/**/*"
+      instructions: |
+        CONTEXTS RULES:
+
+        1. **File naming: `PascalCaseContext.js`** (e.g., `AuthContext.js`).
+
+        2. **Each context file exports three things:**
+           - The context object (`export const XContext = createContext()`)
+           - The provider component (`export const XProvider`)
+           - A consumer hook (`export const useX = () => useContext(XContext)`)
+
+        3. **Contexts are for cross-cutting concerns only:** auth, theme,
+           notifications. Not for high-frequency updates or feature state.
+
+        4. **Do not use context as a global store replacement.** If state
+           management becomes complex, use Zustand or Redux Toolkit.
+
+    - path: "frontend/src/api/**/*"
+      instructions: |
+        API CLIENT RULES:
+
+        1. **`client.js` is the single Axios instance** with base URL,
+           interceptors, auth headers, and timeout configuration.
+
+        2. **Feature API files: `camelCase.api.js`** (e.g., `candidate.api.js`).
+           Each exports functions for CRUD operations on that resource.
+
+        3. **All API functions must use the shared `client` instance.** Never
+           create new axios instances or use raw fetch.
+
+        4. **API functions return the response data,** not the full axios response.
+           Handle response unwrapping inside the API function.
+
+        5. **Error handling for 401 responses** is centralized in the response
+           interceptor (clear token, redirect to login). Do not duplicate this
+           logic in individual API functions.
+
+    - path: "frontend/src/store/**/*"
+      instructions: |
+        STATE MANAGEMENT RULES:
+
+        1. **Use the simplest approach that works:**
+           Local state (useState) → Lifted state → Context → Global store.
+
+        2. **If using Redux Toolkit,** follow the slice pattern with one slice
+           per feature. No standalone action creators or reducers.
+
+        3. **If using Zustand,** one store file per domain concern.
+
+        4. **Selectors must be used** to access store state in components.
+           Never access the entire store object.
+
+        5. **Async logic goes in thunks or store actions,** not in components.
+
+    - path: "frontend/src/routes/**/*"
+      instructions: |
+        FRONTEND ROUTES RULES:
+
+        1. **Route paths defined as constants** in a centralized file. No magic
+           path strings scattered in components.
+
+        2. **Protected routes must use a `PrivateRoute` guard component** that
+           checks authentication state.
+
+        3. **Role-based routes must use a `RoleRoute` guard** that checks
+           user roles from the auth context.
+
+        4. **Lazy load page components** using `React.lazy()` and `Suspense`
+           for route-level code splitting.
+
+    - path: "frontend/src/styles/**/*"
+      instructions: |
+        STYLES RULES:
+
+        1. **`variables.css` is the single source of design tokens.** All
+           colors, spacing, typography, shadows, radii, and z-index must be
+           defined as CSS custom properties here.
+
+        2. **No hardcoded color hex values** in component styles. Use
+           `var(--color-*)` tokens.
+
+        3. **No hardcoded pixel values for spacing.** Use `var(--spacing-*)`
+           tokens.
+
+        4. **Z-index must use the defined scale** (`--z-dropdown`, `--z-sticky`,
+           `--z-overlay`, `--z-modal`, `--z-toast`). Never use arbitrary z-index
+           values.
+
+        5. **Responsive design uses the defined breakpoints:** sm 640px, md 768px,
+           lg 1024px, xl 1280px, 2xl 1536px.
+
+    - path: "frontend/src/utils/**/*"
+      instructions: |
+        FRONTEND UTILS RULES:
+
+        1. **Pure utility functions only.** No side effects, no React hooks,
+           no API calls.
+
+        2. **Constants use UPPER_SNAKE_CASE** with descriptive names.
+
+        3. **Enum-like objects** (ROLES, APPLICATION_STATUS, STORAGE_KEYS) must
+           have UPPER_SNAKE_CASE keys and string values.
+
+        4. **`constants.js` is the single source** for app-wide constants:
+           API URLs, storage keys, roles, statuses, route paths.
+
+        5. **Do not duplicate constants.** Import from `constants.js` everywhere.
+
+    # ===========================================================================
+    # DOCKER & INFRASTRUCTURE
+    # ===========================================================================
+
+    - path: "docker-compose*.yml"
+      instructions: |
+        DOCKER COMPOSE RULES:
+
+        1. **Services must have explicit `container_name`** for predictable naming.
+
+        2. **Named volumes for data persistence.** Never use anonymous volumes
+           for database data.
+
+        3. **All services on the same bridge network** for inter-service
+           communication by container name.
+
+        4. **Environment variables must not contain secrets** in compose files.
+           Use `.env` files or Docker secrets.
+
+        5. **Dev compose uses bind mounts** for hot-reload. Prod compose copies
+           built artifacts.
+
+    - path: "backend/Dockerfile*"
+      instructions: |
+        BACKEND DOCKERFILE RULES:
+
+        1. **Multi-stage builds for production** to minimize image size.
+        2. **Use specific Node.js version tags** (not `latest` or `lts`).
+        3. **Run as non-root user** in production.
+        4. **Copy `package*.json` first** for layer caching.
+        5. **Use `npm ci` in production** (not `npm install`).
+        6. **No dev dependencies in production image.**
+        7. **Add `.dockerignore`** to exclude node_modules, .git, tests, docs.
+
+    - path: "frontend/Dockerfile*"
+      instructions: |
+        FRONTEND DOCKERFILE RULES:
+
+        1. **Multi-stage builds:** build stage (Node) → serve stage (nginx).
+        2. **Use specific Node.js and nginx version tags.**
+        3. **nginx config must include** security headers, gzip, and SPA fallback
+           routing (`try_files $uri /index.html`).
+        4. **No source code in the production image.** Only the build output.
+
+    # ===========================================================================
+    # DOCUMENTATION
+    # ===========================================================================
+
+    - path: "docs/**/*"
+      instructions: |
+        DOCUMENTATION RULES:
+
+        1. **Keep docs in sync with code.** If a PR changes behavior documented
+           in `docs/`, the docs must be updated in the same PR.
+
+        2. **Use consistent formatting:** headings, tables, code blocks with
+           language hints.
+
+        3. **API changes must update `API_CONVENTIONS.md`.**
+
+        4. **New env vars must update `ENVIRONMENT_SETUP.md`.**
+
+    # ===========================================================================
+    # CI/CD & CONFIG FILES
+    # ===========================================================================
+
+    - path: ".github/**/*"
+      instructions: |
+        GITHUB CONFIG RULES:
+
+        1. **PR template must be used for all pull requests.** Verify PR
+           descriptions are not empty and follow the template.
+
+        2. **Issue templates must include reproduction steps** for bug reports
+           and acceptance criteria for feature requests.
+
+    - path: ".husky/**/*"
+      instructions: |
+        HUSKY / GIT HOOKS RULES:
+
+        1. **Pre-commit hook must run lint-staged** on staged files.
+        2. **Commit-msg hook must validate Conventional Commits format.**
+        3. **Never bypass hooks** (`--no-verify`) except in genuine emergencies.
+
+    - path: "*.json"
+      instructions: |
+        PACKAGE / CONFIG JSON RULES:
+
+        1. **`package.json` dependencies must use `^` semver ranges** (default
+           npm behavior). Pin exact versions only with documented justification.
+
+        2. **No `*` or `latest` version ranges** in dependencies.
+
+        3. **`engines` field must specify `node >= 18.0.0`.**
+
+        4. **`lint-staged` config must cover both backend and frontend source
+           files** with Prettier and ESLint.
+
+  tools:
+    eslint:
+      enabled: true
+    ruff:
+      enabled: false
+    biome:
+      enabled: false
+    hadolint:
+      enabled: true
+    markdownlint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    yamllint:
+      enabled: true
+    actionlint:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  jira:
+    project_keys: []
+  linear:
+    team_keys: []
+  pull_requests:
+    scope: auto
