@@ -4,7 +4,10 @@
  */
 
 const bcrypt = require('bcrypt');
+const { Prisma } = require('@prisma/client');
 const prisma = require('../lib/prisma');
+const AppError = require('../core/errors/AppError');
+const { invalidateUserCache } = require('../config/cache');
 
 const SALT_ROUNDS = 10;
 
@@ -30,13 +33,17 @@ const SALT_ROUNDS = 10;
  * @throws {Error} Throws Prisma errors or other runtime errors
  */
 const findAll = async ({ page = 1, limit = 20 }) => {
-  const cappedLimit = Math.min(Math.max(1, limit), 100);
-  const skip = (Math.max(1, page) - 1) * cappedLimit;
+  const parsedPage = Number.parseInt(page, 10) || 1;
+  const parsedLimit = Number.parseInt(limit, 10) || 20;
+  const normalizedPage = Math.max(1, parsedPage);
+  const normalizedLimit = Math.min(Math.max(1, parsedLimit), 100);
+  const skip = (normalizedPage - 1) * normalizedLimit;
+  const take = normalizedLimit;
 
   const [users, total] = await Promise.all([
     prisma.user.findMany({
       skip,
-      take: cappedLimit,
+      take,
       select: {
         id: true,
         email: true,
@@ -52,10 +59,10 @@ const findAll = async ({ page = 1, limit = 20 }) => {
   return {
     users,
     pagination: {
-      page: Math.max(1, page),
-      limit: cappedLimit,
+      page: normalizedPage,
+      limit: normalizedLimit,
       total,
-      totalPages: Math.ceil(total / cappedLimit),
+      totalPages: Math.ceil(total / normalizedLimit),
     },
   };
 };
@@ -153,22 +160,34 @@ const update = async (id, data) => {
   if (data.email !== undefined) allowedFields.email = data.email;
 
   if (Object.keys(allowedFields).length === 0) {
-    const validationError = new Error('No valid fields provided to update');
-    validationError.statusCode = 400;
-    throw validationError;
+    throw new AppError('No valid fields provided to update', 400);
   }
 
-  return prisma.user.update({
-    where: { id },
-    data: allowedFields,
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  try {
+    const result = await prisma.user.update({
+      where: { id },
+      data: allowedFields,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    invalidateUserCache(id);
+    return result;
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        throw new AppError('User not found', 404);
+      }
+      if (error.code === 'P2002') {
+        throw new AppError('Email already in use', 409);
+      }
+    }
+    throw error;
+  }
 };
 
 /**
@@ -182,7 +201,7 @@ const update = async (id, data) => {
  */
 const deleteUser = async (id) => {
   try {
-    return await prisma.user.delete({
+    const result = await prisma.user.delete({
       where: { id },
       select: {
         id: true,
@@ -192,11 +211,13 @@ const deleteUser = async (id) => {
         updatedAt: true,
       },
     });
+    invalidateUserCache(id);
+    return result;
   } catch (error) {
-    if (error.code === 'P2025') {
-      const notFoundError = new Error('User not found');
-      notFoundError.statusCode = 404;
-      throw notFoundError;
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        throw new AppError('User not found', 404);
+      }
     }
     throw error;
   }
