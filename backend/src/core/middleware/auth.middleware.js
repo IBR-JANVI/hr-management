@@ -1,27 +1,50 @@
 /**
- * Auth Middleware - JWT verification
+ * @module auth.middleware
+ * @description JWT authentication middleware for verifying tokens and protecting routes
  */
 const jwt = require('jsonwebtoken');
 const prisma = require('../../lib/prisma');
+const { getConfig } = require('../../config/env');
+
+const { JWT_SECRET } = getConfig();
 
 const authMiddleware = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
+  const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      success: false,
+      data: null,
+      error: { message: 'No token provided' }
+    });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, JWT_SECRET);
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
         data: null,
-        error: { message: 'No token provided' }
+        error: { message: 'Token expired' }
       });
     }
 
-    const token = authHeader.split(' ')[1];
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        data: null,
+        error: { message: 'Invalid token' }
+      });
+    }
 
-    // Verify access token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    return next(error);
+  }
 
-    // Fetch user with roles and permissions
+  try {
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       include: {
@@ -57,7 +80,6 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Extract permissions
     const permissions = user.roles.flatMap(ur => 
       ur.role.permissions.map(rp => ({
         module: rp.permission.module,
@@ -65,10 +87,8 @@ const authMiddleware = async (req, res, next) => {
       }))
     );
 
-    // Check if user is super admin
     const isSuperAdmin = user.roles.some(ur => ur.role.isSuperAdmin);
 
-    // Attach user to request
     req.user = {
       id: user.id,
       email: user.email,
@@ -80,19 +100,7 @@ const authMiddleware = async (req, res, next) => {
 
     next();
   } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        data: null,
-        error: { message: 'Token expired' }
-      });
-    }
-
-    return res.status(401).json({
-      success: false,
-      data: null,
-      error: { message: 'Invalid token' }
-    });
+    next(error);
   }
 };
 
