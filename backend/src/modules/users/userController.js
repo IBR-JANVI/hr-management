@@ -1,5 +1,6 @@
 /**
- * User Controller - Handle user management routes
+ * @module userController
+ * @description User Controller - Handle user management routes
  */
 const userService = require('./userService');
 const catchAsync = require('../../core/middleware/catchAsync');
@@ -11,9 +12,28 @@ const catchAsync = require('../../core/middleware/catchAsync');
 const getAllUsers = catchAsync(async (req, res) => {
   const { page = 1, limit = 10, status, search } = req.query;
 
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+
+  if (isNaN(pageNum) || pageNum < 1) {
+    return res.status(400).json({
+      success: false,
+      data: null,
+      error: { message: 'Invalid page parameter. Must be a positive integer.', code: 'VALIDATION_ERROR' }
+    });
+  }
+
+  if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+    return res.status(400).json({
+      success: false,
+      data: null,
+      error: { message: 'Invalid limit parameter. Must be between 1 and 100.', code: 'VALIDATION_ERROR' }
+    });
+  }
+
   const result = await userService.getAllUsers({
-    page: parseInt(page),
-    limit: parseInt(limit),
+    page: pageNum,
+    limit: limitNum,
     status,
     search
   });
