@@ -4,19 +4,7 @@
  */
 const prisma = require('../lib/prisma');
 const AppError = require('../core/errors/AppError');
-
-const DEFAULT_LIMIT = 20;
-const MAX_LIMIT = 100;
-
-const normalizePagination = (page = 1, limit = DEFAULT_LIMIT) => {
-  const normalizedPage = Math.max(1, parseInt(page, 10) || 1);
-  const normalizedLimit = Math.min(MAX_LIMIT, Math.max(1, parseInt(limit, 10) || DEFAULT_LIMIT));
-  return {
-    page: normalizedPage,
-    limit: normalizedLimit,
-    skip: (normalizedPage - 1) * normalizedLimit
-  };
-};
+const { normalizePagination } = require('../utils/pagination');
 
 /**
  * @description Get all permissions with pagination
@@ -25,7 +13,7 @@ const normalizePagination = (page = 1, limit = DEFAULT_LIMIT) => {
  * @returns {Promise<{permissions: Array, pagination: Object}>}
  * @throws {AppError} 404 - Never thrown for getAllPermissions
  */
-const getAllPermissions = async ({ page = 1, limit = DEFAULT_LIMIT } = {}) => {
+const getAllPermissions = async ({ page = 1, limit = 20 } = {}) => {
   const { skip, limit: take, page: normalizedPage } = normalizePagination(page, limit);
 
   const [permissions, total] = await Promise.all([
@@ -34,10 +22,8 @@ const getAllPermissions = async ({ page = 1, limit = DEFAULT_LIMIT } = {}) => {
       take,
       orderBy: [{ module: 'asc' }, { action: 'asc' }],
       include: {
-        roles: {
-          include: {
-            role: true
-          }
+        _count: {
+          select: { roles: true }
         }
       }
     }),
@@ -50,7 +36,7 @@ const getAllPermissions = async ({ page = 1, limit = DEFAULT_LIMIT } = {}) => {
       module: permission.module,
       action: permission.action,
       createdAt: permission.createdAt,
-      roleCount: permission.roles.length
+      roleCount: permission._count.roles
     })),
     pagination: {
       page: normalizedPage,
@@ -149,6 +135,7 @@ const createPermission = async ({ module, action }) => {
  * @param {string} [data.module] - New module name
  * @param {string} [data.action] - New action name
  * @returns {Promise<Object>}
+ * @throws {AppError} 400 - When module or action is empty after trimming
  * @throws {AppError} 404 - When permission not found
  * @throws {AppError} 409 - When updated permission already exists
  */
@@ -247,8 +234,9 @@ const deletePermission = async (id) => {
  * @param {number} page - Page number
  * @param {number} limit - Items per page
  * @returns {Promise<{permissions: Array, pagination: Object}>}
+ * @throws {AppError} 400 - When module is missing or invalid
  */
-const getPermissionsByModule = async (module, { page = 1, limit = DEFAULT_LIMIT } = {}) => {
+const getPermissionsByModule = async (module, { page = 1, limit = 20 } = {}) => {
   if (typeof module !== 'string' || !module.trim()) {
     throw new AppError('Module is required and must be a non-empty string', 400);
   }

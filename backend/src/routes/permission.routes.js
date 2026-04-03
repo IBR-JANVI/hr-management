@@ -11,14 +11,14 @@ const authMiddleware = require('../core/middleware/auth.middleware');
 const { rbacMiddleware } = require('../core/middleware/rbac.middleware');
 
 const createPermissionValidator = validate([
-  body('module').notEmpty().withMessage('Module is required').isString(),
-  body('action').notEmpty().withMessage('Action is required').isString()
+  body('module').trim().notEmpty().withMessage('Module is required').isString(),
+  body('action').trim().notEmpty().withMessage('Action is required').isString()
 ]);
 
 const updatePermissionValidator = validate([
   param('id').isUUID().withMessage('Valid permission ID is required'),
-  body('module').optional().isString(),
-  body('action').optional().isString()
+  body('module').optional().trim().notEmpty().isString(),
+  body('action').optional().trim().notEmpty().isString()
 ]);
 
 router.use(authMiddleware);

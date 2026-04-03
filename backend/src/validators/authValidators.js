@@ -33,11 +33,11 @@ const loginValidator = validate([
 ]);
 
 const refreshValidator = validate([
-  body('refreshToken').notEmpty().withMessage('Refresh token is required')
+  body('refreshToken').notEmpty().withMessage('Refresh token is required').isString().withMessage('Refresh token must be a string')
 ]);
 
 const logoutValidator = validate([
-  body('refreshToken').optional()
+  body('refreshToken').optional().isString().withMessage('Refresh token must be a string')
 ]);
 
 module.exports = {

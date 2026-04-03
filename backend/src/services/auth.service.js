@@ -62,6 +62,30 @@ const register = async ({ email, password, name }) => {
 const login = async ({ email, password }) => {
   const user = await prisma.user.findUnique({
     where: { email },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      password: true,
+      status: true
+    }
+  });
+
+  if (!user) {
+    throw new AppError('Invalid credentials', 401);
+  }
+
+  const isValidPassword = await bcrypt.compare(password, user.password);
+  if (!isValidPassword) {
+    throw new AppError('Invalid credentials', 401);
+  }
+
+  if (user.status !== 'ACTIVE') {
+    throw new AppError('Account is not active. Please contact admin for approval.', 403);
+  }
+
+  const fullUser = await prisma.user.findUnique({
+    where: { id: user.id },
     include: {
       roles: {
         include: {
@@ -79,33 +103,20 @@ const login = async ({ email, password }) => {
     }
   });
 
-  if (!user) {
-    throw new AppError('Invalid credentials', 401);
-  }
-
-  if (user.status !== 'ACTIVE') {
-    throw new AppError('Account is not active. Please contact admin for approval.', 403);
-  }
-
-  const isValidPassword = await bcrypt.compare(password, user.password);
-  if (!isValidPassword) {
-    throw new AppError('Invalid credentials', 401);
-  }
-
-  const roles = user.roles.map(ur => ({
+  const roles = fullUser.roles.map(ur => ({
     id: ur.role.id,
     name: ur.role.name,
     isSuperAdmin: ur.role.isSuperAdmin
   }));
 
-  const permissions = user.roles.flatMap(ur => 
+  const permissions = fullUser.roles.flatMap(ur =>
     ur.role.permissions.map(rp => ({
       module: rp.permission.module,
       action: rp.permission.action
     }))
   );
 
-  const isSuperAdmin = user.roles.some(ur => ur.role.isSuperAdmin);
+  const isSuperAdmin = fullUser.roles.some(ur => ur.role.isSuperAdmin);
 
   const accessToken = jwt.sign(
     { userId: user.id, email: user.email },
