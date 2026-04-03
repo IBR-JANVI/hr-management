@@ -1,41 +1,85 @@
 /**
  * @module userController
- * @description Controller module for handling user management routes
+ * @description User Controller - Handle user management routes
  */
-const userService = require('../services/user.service.js');
-const catchAsync = require('../core/middleware/catchAsync');
+const userService = require('../services/user.service');
+const catchAsync = require('../core/middleware/asyncHandler');
 const ApiResponse = require('../core/utils/ApiResponse');
 
-export const userController = {
-  getAllUsers: catchAsync(async (req, res) => {
-    const users = await userService.findAll({});
-    ApiResponse.success(res, users);
-  }),
+const getAllUsers = catchAsync(async (req, res) => {
+  const { page = 1, limit = 10, status, search } = req.query;
 
-  getUserById: catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const user = await userService.findById(id);
-    ApiResponse.success(res, user);
-  }),
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
 
-  createUser: catchAsync(async (req, res) => {
-    const { email, name, password } = req.body;
-    const user = await userService.create({ email, name, password });
-    ApiResponse.success(res, user, 201);
-  }),
+  const result = await userService.getAllUsers({
+    page: pageNum,
+    limit: limitNum,
+    status,
+    search
+  });
 
-  updateUser: catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const { name } = req.body;
-    const user = await userService.update(id, { name });
-    ApiResponse.success(res, user);
-  }),
+  ApiResponse.success(res, result);
+});
 
-  deleteUser: catchAsync(async (req, res) => {
-    const { id } = req.params;
-    await userService.delete(id);
-    ApiResponse.success(res, null);
-  }),
+const getPendingUsers = catchAsync(async (req, res) => {
+  const users = await userService.getPendingUsers();
+  ApiResponse.success(res, { users });
+});
+
+const getStats = catchAsync(async (req, res) => {
+  const stats = await userService.getStats();
+  ApiResponse.success(res, stats);
+});
+
+const getUserById = catchAsync(async (req, res) => {
+  const user = await userService.getUserById(req.params.id);
+  ApiResponse.success(res, { user });
+});
+
+const createUser = catchAsync(async (req, res) => {
+  const { email, password, name, roleIds } = req.body;
+  const user = await userService.createUser({ email, password, name, roleIds });
+  ApiResponse.success(res, { user }, 201);
+});
+
+const updateUser = catchAsync(async (req, res) => {
+  const { name, email } = req.body;
+  const user = await userService.updateUser(req.params.id, { name, email });
+  ApiResponse.success(res, { user });
+});
+
+const approveUser = catchAsync(async (req, res) => {
+  const { roleIds } = req.body;
+  const user = await userService.approveUser(req.params.id, { roleIds });
+  ApiResponse.success(res, { user, message: 'User approved successfully' });
+});
+
+const rejectUser = catchAsync(async (req, res) => {
+  const user = await userService.rejectUser(req.params.id);
+  ApiResponse.success(res, { user, message: 'User rejected' });
+});
+
+const assignRoles = catchAsync(async (req, res) => {
+  const { roleIds } = req.body;
+  const user = await userService.assignRoles(req.params.id, { roleIds });
+  ApiResponse.success(res, { user });
+});
+
+const deleteUser = catchAsync(async (req, res) => {
+  await userService.deleteUser(req.params.id);
+  ApiResponse.success(res, { message: 'User deleted successfully' });
+});
+
+module.exports = {
+  getAllUsers,
+  getPendingUsers,
+  getStats,
+  getUserById,
+  createUser,
+  updateUser,
+  approveUser,
+  rejectUser,
+  assignRoles,
+  deleteUser
 };
-
-export default userController;

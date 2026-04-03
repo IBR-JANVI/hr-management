@@ -50,6 +50,14 @@ const authMiddleware = async (req, res, next) => {
     return next(error);
   }
 
+  if (decoded.tokenType === 'refresh') {
+    return res.status(401).json({
+      success: false,
+      data: null,
+      error: { message: 'Access token required' }
+    });
+  }
+
   if (!decoded || typeof decoded.userId !== 'string') {
     return res.status(401).json({
       success: false,
