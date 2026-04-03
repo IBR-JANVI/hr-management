@@ -5,27 +5,68 @@
 const prisma = require('../lib/prisma');
 const AppError = require('../core/errors/AppError');
 
-const getAllPermissions = async () => {
-  const permissions = await prisma.permission.findMany({
-    orderBy: [{ module: 'asc' }, { action: 'asc' }],
-    include: {
-      roles: {
-        include: {
-          role: true
-        }
-      }
-    }
-  });
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
 
-  return permissions.map(permission => ({
-    id: permission.id,
-    module: permission.module,
-    action: permission.action,
-    createdAt: permission.createdAt,
-    roleCount: permission.roles.length
-  }));
+const normalizePagination = (page = 1, limit = DEFAULT_LIMIT) => {
+  const normalizedPage = Math.max(1, parseInt(page, 10) || 1);
+  const normalizedLimit = Math.min(MAX_LIMIT, Math.max(1, parseInt(limit, 10) || DEFAULT_LIMIT));
+  return {
+    page: normalizedPage,
+    limit: normalizedLimit,
+    skip: (normalizedPage - 1) * normalizedLimit
+  };
 };
 
+/**
+ * @description Get all permissions with pagination
+ * @param {number} page - Page number (default 1)
+ * @param {number} limit - Items per page (default 20, max 100)
+ * @returns {Promise<{permissions: Array, pagination: Object}>}
+ * @throws {AppError} 404 - Never thrown for getAllPermissions
+ */
+const getAllPermissions = async ({ page = 1, limit = DEFAULT_LIMIT } = {}) => {
+  const { skip, limit: take } = normalizePagination(page, limit);
+
+  const [permissions, total] = await Promise.all([
+    prisma.permission.findMany({
+      skip,
+      take,
+      orderBy: [{ module: 'asc' }, { action: 'asc' }],
+      include: {
+        roles: {
+          include: {
+            role: true
+          }
+        }
+      }
+    }),
+    prisma.permission.count()
+  ]);
+
+  return {
+    permissions: permissions.map(permission => ({
+      id: permission.id,
+      module: permission.module,
+      action: permission.action,
+      createdAt: permission.createdAt,
+      roleCount: permission.roles.length
+    })),
+    pagination: {
+      page,
+      limit: take,
+      total,
+      totalPages: Math.ceil(total / take)
+    }
+  };
+};
+
+/**
+ * @description Get a permission by ID
+ * @param {string} id - Permission UUID
+ * @returns {Promise<Object>}
+ * @throws {AppError} 404 - When permission not found
+ */
 const getPermissionById = async (id) => {
   const permission = await prisma.permission.findUnique({
     where: { id },
@@ -54,12 +95,30 @@ const getPermissionById = async (id) => {
   };
 };
 
+/**
+ * @description Create a new permission (module/action normalized to lowercase)
+ * @param {string} module - Module name
+ * @param {string} action - Action name
+ * @returns {Promise<Object>}
+ * @throws {AppError} 400 - When module or action is missing/invalid
+ * @throws {AppError} 409 - When permission already exists
+ */
 const createPermission = async ({ module, action }) => {
+  if (typeof module !== 'string' || !module.trim()) {
+    throw new AppError('Module is required and must be a non-empty string', 400);
+  }
+  if (typeof action !== 'string' || !action.trim()) {
+    throw new AppError('Action is required and must be a non-empty string', 400);
+  }
+
+  const normalizedModule = module.toLowerCase().trim();
+  const normalizedAction = action.toLowerCase().trim();
+
   const existingPermission = await prisma.permission.findUnique({
     where: {
       module_action: {
-        module: module.toLowerCase(),
-        action: action.toLowerCase()
+        module: normalizedModule,
+        action: normalizedAction
       }
     }
   });
@@ -70,8 +129,8 @@ const createPermission = async ({ module, action }) => {
 
   const permission = await prisma.permission.create({
     data: {
-      module: module.toLowerCase(),
-      action: action.toLowerCase()
+      module: normalizedModule,
+      action: normalizedAction
     }
   });
 
@@ -83,6 +142,16 @@ const createPermission = async ({ module, action }) => {
   };
 };
 
+/**
+ * @description Update an existing permission (module/action normalized to lowercase)
+ * @param {string} id - Permission UUID
+ * @param {Object} data - Update data
+ * @param {string} [data.module] - New module name
+ * @param {string} [data.action] - New action name
+ * @returns {Promise<Object>}
+ * @throws {AppError} 404 - When permission not found
+ * @throws {AppError} 409 - When updated permission already exists
+ */
 const updatePermission = async (id, { module, action }) => {
   const existingPermission = await prisma.permission.findUnique({
     where: { id }
@@ -125,6 +194,13 @@ const updatePermission = async (id, { module, action }) => {
   };
 };
 
+/**
+ * @description Delete a permission
+ * @param {string} id - Permission UUID
+ * @returns {Promise<Object>}
+ * @throws {AppError} 404 - When permission not found
+ * @throws {AppError} 400 - When permission is assigned to roles
+ */
 const deletePermission = async (id) => {
   const existingPermission = await prisma.permission.findUnique({
     where: { id }
@@ -149,19 +225,50 @@ const deletePermission = async (id) => {
   return { message: 'Permission deleted successfully' };
 };
 
-const getPermissionsByModule = async (module) => {
-  const permissions = await prisma.permission.findMany({
-    where: { module: module.toLowerCase() },
-    orderBy: { action: 'asc' }
-  });
+/**
+ * @description Get permissions by module with pagination
+ * @param {string} module - Module name
+ * @param {number} page - Page number
+ * @param {number} limit - Items per page
+ * @returns {Promise<{permissions: Array, pagination: Object}>}
+ */
+const getPermissionsByModule = async (module, { page = 1, limit = DEFAULT_LIMIT } = {}) => {
+  if (typeof module !== 'string' || !module.trim()) {
+    throw new AppError('Module is required and must be a non-empty string', 400);
+  }
 
-  return permissions.map(p => ({
-    id: p.id,
-    module: p.module,
-    action: p.action
-  }));
+  const { skip, limit: take } = normalizePagination(page, limit);
+  const normalizedModule = module.toLowerCase().trim();
+
+  const [permissions, total] = await Promise.all([
+    prisma.permission.findMany({
+      where: { module: normalizedModule },
+      skip,
+      take,
+      orderBy: { action: 'asc' }
+    }),
+    prisma.permission.count({ where: { module: normalizedModule } })
+  ]);
+
+  return {
+    permissions: permissions.map(p => ({
+      id: p.id,
+      module: p.module,
+      action: p.action
+    })),
+    pagination: {
+      page,
+      limit: take,
+      total,
+      totalPages: Math.ceil(total / take)
+    }
+  };
 };
 
+/**
+ * @description Get all distinct modules
+ * @returns {Promise<Array<string>>}
+ */
 const getAllModules = async () => {
   const permissions = await prisma.permission.findMany({
     select: { module: true },

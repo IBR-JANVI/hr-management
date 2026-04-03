@@ -8,9 +8,9 @@ const prisma = require('../lib/prisma');
 const { getConfig } = require('../config/env');
 const AppError = require('../core/errors/AppError');
 
-const { JWT_SECRET } = getConfig();
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
-const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
+const { JWT_SECRET, jwtExpiresIn, refreshTokenExpiresIn } = getConfig();
+const JWT_EXPIRES_IN = jwtExpiresIn;
+const REFRESH_TOKEN_EXPIRES_IN = refreshTokenExpiresIn;
 
 const register = async ({ email, password, name }) => {
   const existingUser = await prisma.user.findUnique({
@@ -100,8 +100,8 @@ const login = async ({ email, password }) => {
     { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
   );
 
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7);
+  const decoded = jwt.decode(refreshToken);
+  const expiresAt = new Date(decoded.exp * 1000);
 
   await prisma.refreshToken.create({
     data: {
@@ -126,6 +126,17 @@ const login = async ({ email, password }) => {
 };
 
 const refreshToken = async ({ refreshToken: token }) => {
+  let decoded;
+  try {
+    decoded = jwt.verify(token, JWT_SECRET);
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      await prisma.refreshToken.deleteMany({ where: { token } });
+      throw new AppError('Refresh token expired', 401);
+    }
+    throw new AppError('Invalid refresh token', 401);
+  }
+
   const storedToken = await prisma.refreshToken.findUnique({
     where: { token },
     include: {
