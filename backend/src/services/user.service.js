@@ -5,7 +5,21 @@
 const bcrypt = require('bcrypt');
 const prisma = require('../lib/prisma');
 const AppError = require('../core/errors/AppError');
-const { invalidateUserCache, logger } = require('../config/logger');
+const { invalidateUserCache } = require('../config/cache');
+const { logger } = require('../config/logger');
+
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+
+const normalizePagination = (page = 1, limit = DEFAULT_LIMIT) => {
+  const normalizedPage = Math.max(1, parseInt(page, 10) || 1);
+  const normalizedLimit = Math.min(MAX_LIMIT, Math.max(1, parseInt(limit, 10) || DEFAULT_LIMIT));
+  return {
+    page: normalizedPage,
+    limit: normalizedLimit,
+    skip: (normalizedPage - 1) * normalizedLimit
+  };
+};
 
 const safeInvalidateUserCache = (userId) => {
   try {
@@ -18,8 +32,8 @@ const safeInvalidateUserCache = (userId) => {
   }
 };
 
-const getAllUsers = async ({ page = 1, limit = 10, status, search }) => {
-  const skip = (page - 1) * limit;
+const getAllUsers = async ({ page = 1, limit = DEFAULT_LIMIT, status, search }) => {
+  const { skip, limit: take } = normalizePagination(page, limit);
 
   const where = {};
   
@@ -38,12 +52,19 @@ const getAllUsers = async ({ page = 1, limit = 10, status, search }) => {
     prisma.user.findMany({
       where,
       skip,
-      take: limit,
+      take,
       orderBy: { createdAt: 'desc' },
-      include: {
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        status: true,
+        createdAt: true,
         roles: {
           include: {
-            role: true
+            role: {
+              select: { id: true, name: true }
+            }
           }
         }
       }
@@ -65,37 +86,59 @@ const getAllUsers = async ({ page = 1, limit = 10, status, search }) => {
     })),
     pagination: {
       page,
-      limit,
+      limit: take,
       total,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / take)
     }
   };
 };
 
-const getPendingUsers = async () => {
-  const users = await prisma.user.findMany({
-    where: { status: 'PENDING' },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      roles: {
-        include: {
-          role: true
+const getPendingUsers = async ({ page = 1, limit = DEFAULT_LIMIT } = {}) => {
+  const { skip, limit: take } = normalizePagination(page, limit);
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      where: { status: 'PENDING' },
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        status: true,
+        createdAt: true,
+        roles: {
+          include: {
+            role: {
+              select: { id: true, name: true }
+            }
+          }
         }
       }
-    }
-  });
+    }),
+    prisma.user.count({ where: { status: 'PENDING' } })
+  ]);
 
-  return users.map(user => ({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    status: user.status,
-    createdAt: user.createdAt,
-    roles: user.roles.map(ur => ({
-      id: ur.role.id,
-      name: ur.role.name
-    }))
-  }));
+  return {
+    users: users.map(user => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      status: user.status,
+      createdAt: user.createdAt,
+      roles: user.roles.map(ur => ({
+        id: ur.role.id,
+        name: ur.role.name
+      }))
+    })),
+    pagination: {
+      page,
+      limit: take,
+      total,
+      totalPages: Math.ceil(total / take)
+    }
+  };
 };
 
 const getStats = async () => {
@@ -257,35 +300,46 @@ const updateUser = async (id, { name, email }) => {
 };
 
 const approveUser = async (id, { roleIds }) => {
-  const existingUser = await prisma.user.findUnique({
-    where: { id }
-  });
+  const roleIdsArray = Array.isArray(roleIds) ? Array.from(new Set(roleIds)) : [];
 
-  if (!existingUser) {
-    throw new AppError('User not found', 404);
-  }
+  const user = await prisma.$transaction(async (tx) => {
+    const result = await tx.user.updateMany({
+      where: { id, status: 'PENDING' },
+      data: { status: 'ACTIVE' }
+    });
 
-  if (existingUser.status !== 'PENDING') {
-    throw new AppError('Only pending users can be approved', 400);
-  }
-
-  const roleIdsArray = Array.isArray(roleIds) ? roleIds : [];
-
-  const user = await prisma.user.update({
-    where: { id },
-    data: {
-      status: 'ACTIVE',
-      roles: {
-        create: roleIdsArray.map(roleId => ({ roleId }))
+    if (result.count === 0) {
+      const existing = await tx.user.findUnique({ where: { id } });
+      if (!existing) {
+        throw new AppError('User not found', 404);
       }
-    },
-    include: {
-      roles: {
-        include: {
-          role: true
+      throw new AppError('Only pending users can be approved', 400);
+    }
+
+    if (roleIdsArray.length > 0) {
+      await tx.userRole.deleteMany({ where: { userId: id } });
+      await tx.userRole.createMany({
+        data: roleIdsArray.map(roleId => ({ userId: id, roleId }))
+      });
+    }
+
+    return tx.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        status: true,
+        createdAt: true,
+        roles: {
+          include: {
+            role: {
+              select: { id: true, name: true }
+            }
+          }
         }
       }
-    }
+    });
   });
 
   safeInvalidateUserCache(id);
@@ -304,28 +358,37 @@ const approveUser = async (id, { roleIds }) => {
 };
 
 const rejectUser = async (id) => {
-  const existingUser = await prisma.user.findUnique({
-    where: { id }
-  });
+  const user = await prisma.$transaction(async (tx) => {
+    const result = await tx.user.updateMany({
+      where: { id, status: 'PENDING' },
+      data: { status: 'REJECTED' }
+    });
 
-  if (!existingUser) {
-    throw new AppError('User not found', 404);
-  }
+    if (result.count === 0) {
+      const existing = await tx.user.findUnique({ where: { id } });
+      if (!existing) {
+        throw new AppError('User not found', 404);
+      }
+      throw new AppError('Only pending users can be rejected', 400);
+    }
 
-  if (existingUser.status !== 'PENDING') {
-    throw new AppError('Only pending users can be rejected', 400);
-  }
-
-  const user = await prisma.user.update({
-    where: { id },
-    data: { status: 'REJECTED' },
-    include: {
-      roles: {
-        include: {
-          role: true
+    return tx.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        status: true,
+        createdAt: true,
+        roles: {
+          include: {
+            role: {
+              select: { id: true, name: true }
+            }
+          }
         }
       }
-    }
+    });
   });
 
   safeInvalidateUserCache(id);
@@ -335,6 +398,7 @@ const rejectUser = async (id) => {
     email: user.email,
     name: user.name,
     status: user.status,
+    createdAt: user.createdAt,
     roles: user.roles.map(ur => ({
       id: ur.role.id,
       name: ur.role.name
@@ -342,7 +406,7 @@ const rejectUser = async (id) => {
   };
 };
 
-const assignRoles = async (id, { roleIds }) => {
+  const assignRoles = async (id, { roleIds }) => {
   const existingUser = await prisma.user.findUnique({
     where: { id }
   });

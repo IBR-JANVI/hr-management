@@ -1,21 +1,19 @@
+/**
+ * @module backend/server
+ * @description Main Express server entry point - initializes and configures the HR Management API server
+ */
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
-
-const authRoutes = require('./routes/auth.routes');
-const userRoutes = require('./routes/user.routes');
-const roleRoutes = require('./routes/role.routes');
-const permissionRoutes = require('./routes/permission.routes');
-
-const errorMiddleware = require('./core/middleware/error.middleware');
-const { logger } = require('./config/logger');
+const { getConfig } = require('./config/env');
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const { port: PORT } = getConfig();
 
 app.use(helmet());
 app.use(cors());
