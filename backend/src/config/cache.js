@@ -6,8 +6,32 @@
 const CACHE_TTL_SECONDS = 300;
 
 class Cache {
-  constructor() {
+  constructor(cleanupIntervalMs = 60000) {
     this.store = new Map();
+    this.cleanupIntervalMs = cleanupIntervalMs;
+    this.cleanupInterval = null;
+    this.startCleanupInterval();
+  }
+
+  startCleanupInterval() {
+    if (this.cleanupInterval) {
+      return;
+    }
+    this.cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      for (const [key, item] of this.store.entries()) {
+        if (now > item.expiry) {
+          this.store.delete(key);
+        }
+      }
+    }, this.cleanupIntervalMs);
+  }
+
+  stopCleanup() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
   }
 
   get(key) {
