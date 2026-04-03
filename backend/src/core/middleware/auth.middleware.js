@@ -10,10 +10,6 @@ const { userCache, CACHE_TTL_SECONDS } = require('../../config/cache');
 const config = getConfig();
 const { JWT_SECRET } = config;
 
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is not defined in environment variables');
-}
-
 const CACHE_TTL_SECONDS = 300;
 
 const USER_STATUS_ACTIVE = 'ACTIVE';
