@@ -3,15 +3,10 @@
  * @description Auth Service - Business logic for authentication
  */
 const bcrypt = require('bcrypt');
-const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
-const { getConfig } = require('../config/env');
 const AppError = require('../core/errors/AppError');
-
-const { JWT_SECRET, REFRESH_JWT_SECRET, jwtExpiresIn, refreshTokenExpiresIn } = getConfig();
-const JWT_EXPIRES_IN = jwtExpiresIn;
-const REFRESH_TOKEN_EXPIRES_IN = refreshTokenExpiresIn;
+const tokensService = require('./tokens.service');
+const profileService = require('./profile.service');
 
 /**
  * Registers a new user in the system
@@ -19,7 +14,7 @@ const REFRESH_TOKEN_EXPIRES_IN = refreshTokenExpiresIn;
  * @param {string} params.email - User's email address
  * @param {string} params.password - User's password
  * @param {string} [params.name] - User's name
- * @returns {Promise<{id: string, email: string, name: string, status: string}>} - Created user object
+ * @returns {Promise<{id: string, email: string, name: string, status: string}>}
  * @throws {AppError} 409 - Email already registered
  */
 const register = async ({ email, password, name }) => {
@@ -55,7 +50,7 @@ const register = async ({ email, password, name }) => {
  * @param {Object} params - Login parameters
  * @param {string} params.email - User's email address
  * @param {string} params.password - User's password
- * @returns {Promise<{user: Object, accessToken: string, refreshToken: string}>} - User data and tokens
+ * @returns {Promise<{user: Object, accessToken: string, refreshToken: string}>}
  * @throws {AppError} 401 - Invalid credentials
  * @throws {AppError} 403 - Account is not active
  */
@@ -103,54 +98,13 @@ const login = async ({ email, password }) => {
     }
   });
 
-  const roles = fullUser.roles.map(ur => ({
-    id: ur.role.id,
-    name: ur.role.name,
-    isSuperAdmin: ur.role.isSuperAdmin
-  }));
+  const shapedUser = profileService.shapeUser(fullUser);
 
-  const permissions = fullUser.roles.flatMap(ur =>
-    ur.role.permissions.map(rp => ({
-      module: rp.permission.module,
-      action: rp.permission.action
-    }))
-  );
-
-  const isSuperAdmin = fullUser.roles.some(ur => ur.role.isSuperAdmin);
-
-  const accessToken = jwt.sign(
-    { userId: user.id, email: user.email, tokenType: 'access' },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
-  );
-
-  const refreshToken = jwt.sign(
-    { userId: user.id, tokenType: 'refresh' },
-    REFRESH_JWT_SECRET,
-    { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
-  );
-
-  const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-  const decoded = jwt.decode(refreshToken);
-  const expiresAt = new Date(decoded.exp * 1000);
-
-  await prisma.refreshToken.create({
-    data: {
-      token: tokenHash,
-      userId: user.id,
-      expiresAt
-    }
-  });
+  const { accessToken, refreshToken } = await tokensService.createTokens(user.id, user.email);
+  await tokensService.storeRefreshToken(refreshToken, user.id);
 
   return {
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      roles,
-      permissions,
-      isSuperAdmin
-    },
+    user: shapedUser,
     accessToken,
     refreshToken
   };
@@ -160,61 +114,11 @@ const login = async ({ email, password }) => {
  * Refreshes an access token using a valid refresh token
  * @param {Object} params - Token refresh parameters
  * @param {string} params.refreshToken - The refresh token to use
- * @returns {Promise<{accessToken: string}>} - New access token
+ * @returns {Promise<{accessToken: string}>}
  * @throws {AppError} 401 - Invalid or expired refresh token
- * @throws {AppError} 401 - User account is not active
  */
 const refreshToken = async ({ refreshToken: token }) => {
-  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-  
-  let decoded;
-  try {
-    decoded = jwt.verify(token, REFRESH_JWT_SECRET);
-  } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      await prisma.refreshToken.deleteMany({ where: { token: tokenHash } });
-      throw new AppError('Refresh token expired', 401);
-    }
-    throw new AppError('Invalid refresh token', 401);
-  }
-
-  if (decoded.tokenType !== 'refresh') {
-    throw new AppError('Invalid refresh token', 401);
-  }
-
-  const storedToken = await prisma.refreshToken.findUnique({
-    where: { token: tokenHash },
-    include: {
-      user: true
-    }
-  });
-
-  if (!storedToken) {
-    throw new AppError('Invalid refresh token', 401);
-  }
-
-  if (storedToken.expiresAt < new Date()) {
-    await prisma.refreshToken.delete({
-      where: { id: storedToken.id }
-    });
-
-    throw new AppError('Refresh token expired', 401);
-  }
-
-  if (storedToken.user.status !== 'ACTIVE') {
-    await prisma.refreshToken.delete({
-      where: { id: storedToken.id }
-    });
-    throw new AppError('User account is not active', 401);
-  }
-
-  const accessToken = jwt.sign(
-    { userId: storedToken.user.id, email: storedToken.user.email },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
-  );
-
-  return { accessToken };
+  return tokensService.refreshToken(token);
 };
 
 /**
@@ -222,77 +126,20 @@ const refreshToken = async ({ refreshToken: token }) => {
  * @param {Object} params - Logout parameters
  * @param {string} [params.refreshToken] - The refresh token to invalidate
  * @param {string} [params.userId] - User ID (used when no refreshToken provided)
- * @returns {Promise<{message: string}>} - Success message
+ * @returns {Promise<{message: string}>}
  */
 const logout = async ({ refreshToken: token, userId }) => {
-  if (token) {
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-    await prisma.refreshToken.deleteMany({
-      where: { token: tokenHash }
-    });
-  } else if (userId) {
-    await prisma.refreshToken.deleteMany({
-      where: { userId }
-    });
-  }
-
-  return { message: 'Logged out successfully' };
+  return tokensService.logout({ refreshToken: token, userId });
 };
 
 /**
  * Retrieves the current user's profile
  * @param {string} userId - The user's ID
- * @returns {Promise<{id: string, email: string, name: string, status: string, roles: Array, permissions: Array, isSuperAdmin: boolean}>} - User profile data
+ * @returns {Promise<{id: string, email: string, name: string, status: string, roles: Array, permissions: Array, isSuperAdmin: boolean}>}
  * @throws {AppError} 404 - User not found
  */
 const getProfile = async (userId) => {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      roles: {
-        include: {
-          role: {
-            include: {
-              permissions: {
-                include: {
-                  permission: true
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  });
-
-  if (!user) {
-    throw new AppError('User not found', 404);
-  }
-
-  const roles = user.roles.map(ur => ({
-    id: ur.role.id,
-    name: ur.role.name,
-    isSuperAdmin: ur.role.isSuperAdmin
-  }));
-
-  const permissions = user.roles.flatMap(ur => 
-    ur.role.permissions.map(rp => ({
-      module: rp.permission.module,
-      action: rp.permission.action
-    }))
-  );
-
-  const isSuperAdmin = user.roles.some(ur => ur.role.isSuperAdmin);
-
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    status: user.status,
-    roles,
-    permissions,
-    isSuperAdmin
-  };
+  return profileService.getProfile(userId);
 };
 
 module.exports = {

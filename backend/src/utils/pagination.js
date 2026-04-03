@@ -3,6 +3,9 @@
  * @description Shared pagination utility for normalizing pagination parameters
  */
 
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+
 /**
  * Normalizes pagination parameters
  * @param {number|string} [page=1] - Page number (default 1)

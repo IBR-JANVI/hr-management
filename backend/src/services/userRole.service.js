@@ -69,7 +69,9 @@ const assignRoles = async (id, { roleIds }) => {
       include: {
         roles: {
           include: {
-            role: true
+            role: {
+              select: { id: true, name: true }
+            }
           }
         }
       }

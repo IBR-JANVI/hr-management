@@ -16,8 +16,8 @@ const DEFAULT_JWT_EXPIRES_IN = '15m';
 const DEFAULT_REFRESH_TOKEN_EXPIRES_IN = '7d';
 
 const getConfig = () => {
-  const JWT_SECRET = process.env.JWT_SECRET;
-  const REFRESH_JWT_SECRET = process.env.REFRESH_JWT_SECRET;
+  const JWT_SECRET = process.env.JWT_SECRET?.trim();
+  const REFRESH_JWT_SECRET = process.env.REFRESH_JWT_SECRET?.trim();
   
   if (!JWT_SECRET) {
     throw new Error('JWT_SECRET is not defined in environment variables');
