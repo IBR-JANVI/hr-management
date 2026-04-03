@@ -26,7 +26,7 @@ const refreshToken = catchAsync(async (req, res) => {
 
 const logout = catchAsync(async (req, res) => {
   const { refreshToken } = req.body;
-  await authService.logout({ refreshToken });
+  await authService.logout({ refreshToken, userId: req.user.id });
   ApiResponse.success(res, { message: 'Logged out successfully' });
 });
 

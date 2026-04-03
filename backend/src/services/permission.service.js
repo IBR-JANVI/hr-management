@@ -26,7 +26,7 @@ const normalizePagination = (page = 1, limit = DEFAULT_LIMIT) => {
  * @throws {AppError} 404 - Never thrown for getAllPermissions
  */
 const getAllPermissions = async ({ page = 1, limit = DEFAULT_LIMIT } = {}) => {
-  const { skip, limit: take } = normalizePagination(page, limit);
+  const { skip, limit: take, page: normalizedPage } = normalizePagination(page, limit);
 
   const [permissions, total] = await Promise.all([
     prisma.permission.findMany({
@@ -53,7 +53,7 @@ const getAllPermissions = async ({ page = 1, limit = DEFAULT_LIMIT } = {}) => {
       roleCount: permission.roles.length
     })),
     pagination: {
-      page,
+      page: normalizedPage,
       limit: take,
       total,
       totalPages: Math.ceil(total / take)
@@ -161,9 +161,25 @@ const updatePermission = async (id, { module, action }) => {
     throw new AppError('Permission not found', 404);
   }
 
+  if (module !== undefined) {
+    const trimmedModule = module.trim();
+    if (!trimmedModule) {
+      throw new AppError('Module cannot be empty', 400);
+    }
+    module = trimmedModule.toLowerCase();
+  }
+
+  if (action !== undefined) {
+    const trimmedAction = action.trim();
+    if (!trimmedAction) {
+      throw new AppError('Action cannot be empty', 400);
+    }
+    action = trimmedAction.toLowerCase();
+  }
+
   if (module || action) {
-    const newModule = (module || existingPermission.module).toLowerCase();
-    const newAction = (action || existingPermission.action).toLowerCase();
+    const newModule = module || existingPermission.module;
+    const newAction = action || existingPermission.action;
 
     const conflict = await prisma.permission.findFirst({
       where: {
@@ -181,8 +197,8 @@ const updatePermission = async (id, { module, action }) => {
   const permission = await prisma.permission.update({
     where: { id },
     data: {
-      ...(module && { module: module.toLowerCase() }),
-      ...(action && { action: action.toLowerCase() })
+      ...(module && { module }),
+      ...(action && { action })
     }
   });
 
@@ -237,7 +253,7 @@ const getPermissionsByModule = async (module, { page = 1, limit = DEFAULT_LIMIT 
     throw new AppError('Module is required and must be a non-empty string', 400);
   }
 
-  const { skip, limit: take } = normalizePagination(page, limit);
+  const { skip, limit: take, page: normalizedPage } = normalizePagination(page, limit);
   const normalizedModule = module.toLowerCase().trim();
 
   const [permissions, total] = await Promise.all([
@@ -257,7 +273,7 @@ const getPermissionsByModule = async (module, { page = 1, limit = DEFAULT_LIMIT 
       action: p.action
     })),
     pagination: {
-      page,
+      page: normalizedPage,
       limit: take,
       total,
       totalPages: Math.ceil(total / take)
