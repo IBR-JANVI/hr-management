@@ -5,16 +5,14 @@
 const jwt = require('jsonwebtoken');
 const prisma = require('../../lib/prisma');
 const { getConfig } = require('../../config/env');
-const { userCache } = require('../../config/cache');
+const { userCache, CACHE_TTL_SECONDS } = require('../../config/cache');
 
 const config = getConfig();
-const { JWT_SECRET, nodeEnv: NODE_ENV } = config;
+const { JWT_SECRET } = config;
 
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET is not defined in environment variables');
 }
-
-const CACHE_TTL_SECONDS = 300;
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;

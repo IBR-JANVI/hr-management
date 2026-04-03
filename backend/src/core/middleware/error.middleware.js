@@ -7,6 +7,9 @@ const { getConfig } = require('../../config/env');
 
 const { nodeEnv } = getConfig();
 
+const PRISMA_ERROR_UNIQUE = 'P2002';
+const PRISMA_ERROR_FOREIGN_KEY = 'P2003';
+
 const errorMiddleware = (err, req, res, next) => {
   logger.error('Error occurred', {
     message: err.message,
@@ -33,12 +36,12 @@ const errorMiddleware = (err, req, res, next) => {
     message = 'Validation Error';
   }
 
-  if (err.code === 'P2002') {
+  if (err.code === PRISMA_ERROR_UNIQUE) {
     statusCode = 409;
     message = `${err.meta?.target?.[0] || 'Field'} already exists`;
   }
 
-  if (err.code === 'P2003') {
+  if (err.code === PRISMA_ERROR_FOREIGN_KEY) {
     statusCode = 400;
     message = 'Invalid reference';
   }
