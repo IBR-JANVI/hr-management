@@ -10,6 +10,12 @@ const { normalizePagination } = require('../utils/pagination');
 
 const DEFAULT_LIMIT = 20;
 
+const USER_STATUS = {
+  ACTIVE: 'ACTIVE',
+  PENDING: 'PENDING',
+  REJECTED: 'REJECTED'
+};
+
 const safeInvalidateUserCache = (userId) => {
   try {
     invalidateUserCache(userId);
@@ -24,13 +30,14 @@ const safeInvalidateUserCache = (userId) => {
 /**
  * Gets user statistics counts
  * @returns {Promise<{totalUsers: number, activeUsers: number, pendingUsers: number, rejectedUsers: number}>} - User statistics
+ * @throws {Error} When database/query or aggregation fails
  */
 const getStats = async () => {
   const [totalUsers, activeUsers, pendingUsers, rejectedUsers] = await Promise.all([
     prisma.user.count(),
-    prisma.user.count({ where: { status: 'ACTIVE' } }),
-    prisma.user.count({ where: { status: 'PENDING' } }),
-    prisma.user.count({ where: { status: 'REJECTED' } })
+    prisma.user.count({ where: { status: USER_STATUS.ACTIVE } }),
+    prisma.user.count({ where: { status: USER_STATUS.PENDING } }),
+    prisma.user.count({ where: { status: USER_STATUS.REJECTED } })
   ]);
 
   return {
@@ -73,8 +80,8 @@ const approveUser = async (id, params = {}) => {
 
   const user = await prisma.$transaction(async (tx) => {
     const result = await tx.user.updateMany({
-      where: { id, status: 'PENDING' },
-      data: { status: 'ACTIVE' }
+      where: { id, status: USER_STATUS.PENDING },
+      data: { status: USER_STATUS.ACTIVE }
     });
 
     if (result.count === 0) {
@@ -85,11 +92,13 @@ const approveUser = async (id, params = {}) => {
       throw new AppError('Only pending users can be approved', 400);
     }
 
-    if (roleIdsArray.length > 0) {
+    if (roleIds !== undefined) {
       await tx.userRole.deleteMany({ where: { userId: id } });
-      await tx.userRole.createMany({
-        data: roleIdsArray.map(roleId => ({ userId: id, roleId }))
-      });
+      if (roleIdsArray.length > 0) {
+        await tx.userRole.createMany({
+          data: roleIdsArray.map(roleId => ({ userId: id, roleId }))
+        });
+      }
     }
 
     return tx.user.findUnique({
@@ -136,8 +145,8 @@ const approveUser = async (id, params = {}) => {
 const rejectUser = async (id) => {
   const user = await prisma.$transaction(async (tx) => {
     const result = await tx.user.updateMany({
-      where: { id, status: 'PENDING' },
-      data: { status: 'REJECTED' }
+      where: { id, status: USER_STATUS.PENDING },
+      data: { status: USER_STATUS.REJECTED }
     });
 
     if (result.count === 0) {
@@ -185,5 +194,6 @@ const rejectUser = async (id) => {
 module.exports = {
   getStats,
   approveUser,
-  rejectUser
+  rejectUser,
+  USER_STATUS
 };

@@ -100,25 +100,26 @@ const createPermission = async ({ module, action }) => {
   const normalizedModule = module.toLowerCase().trim();
   const normalizedAction = action.toLowerCase().trim();
 
-  const existingPermission = await prisma.permission.findUnique({
-    where: {
-      module_action: {
+  try {
+    const permission = await prisma.permission.create({
+      data: {
         module: normalizedModule,
         action: normalizedAction
       }
-    }
-  });
+    });
 
-  if (existingPermission) {
-    throw new AppError('Permission already exists', 409);
+    return {
+      id: permission.id,
+      module: permission.module,
+      action: permission.action,
+      createdAt: permission.createdAt
+    };
+  } catch (error) {
+    if (error.code === 'P2002' && error.meta?.target?.includes('module_action')) {
+      throw new AppError('Permission already exists', 409);
+    }
+    throw error;
   }
-
-  const permission = await prisma.permission.create({
-    data: {
-      module: normalizedModule,
-      action: normalizedAction
-    }
-  });
 
   return {
     id: permission.id,
@@ -174,26 +175,28 @@ const updatePermission = async (id, { module, action }) => {
     const newModule = module || existingPermission.module;
     const newAction = action || existingPermission.action;
 
-    const conflict = await prisma.permission.findFirst({
-      where: {
-        module: newModule,
-        action: newAction,
-        id: { not: id }
-      }
-    });
+    try {
+      const permission = await prisma.permission.update({
+        where: { id },
+        data: {
+          module: newModule,
+          action: newAction
+        }
+      });
 
-    if (conflict) {
-      throw new AppError('Permission already exists', 409);
+      return {
+        id: permission.id,
+        module: permission.module,
+        action: permission.action,
+        createdAt: permission.createdAt
+      };
+    } catch (error) {
+      if (error.code === 'P2002' && error.meta?.target?.includes('module_action')) {
+        throw new AppError('Permission already exists', 409);
+      }
+      throw error;
     }
   }
-
-  const permission = await prisma.permission.update({
-    where: { id },
-    data: {
-      ...(module && { module }),
-      ...(action && { action })
-    }
-  });
 
   return {
     id: permission.id,
