@@ -54,7 +54,7 @@ const getConfig = () => {
     dbPoolSize,
     awsRegion,
     gcpProject,
-    azureSubscriptionId
+    azureSubscriptionId,
   };
 };
 
