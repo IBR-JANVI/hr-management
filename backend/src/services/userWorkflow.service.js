@@ -50,8 +50,26 @@ const getStats = async () => {
  * @throws {AppError} 404 - User not found
  * @throws {AppError} 400 - Only pending users can be approved
  */
-const approveUser = async (id, { roleIds }) => {
-  const roleIdsArray = Array.isArray(roleIds) ? Array.from(new Set(roleIds)) : [];
+const approveUser = async (id, params = {}) => {
+  const { roleIds } = params;
+  
+  if (roleIds !== undefined && !Array.isArray(roleIds)) {
+    throw new AppError('roleIds must be an array', 400);
+  }
+  
+  const roleIdsArray = roleIds ? Array.from(new Set(roleIds)) : [];
+  
+  if (roleIdsArray.length > 0) {
+    const existingRoles = await prisma.role.findMany({
+      where: { id: { in: roleIdsArray } },
+      select: { id: true }
+    });
+    const existingIds = new Set(existingRoles.map(r => r.id));
+    const unknown = roleIdsArray.filter(rid => !existingIds.has(rid));
+    if (unknown.length) {
+      throw new AppError(`Unknown roleIds: ${unknown.join(',')}`, 400);
+    }
+  }
 
   const user = await prisma.$transaction(async (tx) => {
     const result = await tx.user.updateMany({

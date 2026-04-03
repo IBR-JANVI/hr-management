@@ -9,7 +9,7 @@ const prisma = require('../lib/prisma');
 const { getConfig } = require('../config/env');
 const AppError = require('../core/errors/AppError');
 
-const { JWT_SECRET, jwtExpiresIn, refreshTokenExpiresIn } = getConfig();
+const { JWT_SECRET, REFRESH_JWT_SECRET, jwtExpiresIn, refreshTokenExpiresIn } = getConfig();
 const JWT_EXPIRES_IN = jwtExpiresIn;
 const REFRESH_TOKEN_EXPIRES_IN = refreshTokenExpiresIn;
 
@@ -119,14 +119,14 @@ const login = async ({ email, password }) => {
   const isSuperAdmin = fullUser.roles.some(ur => ur.role.isSuperAdmin);
 
   const accessToken = jwt.sign(
-    { userId: user.id, email: user.email },
+    { userId: user.id, email: user.email, tokenType: 'access' },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
 
   const refreshToken = jwt.sign(
-    { userId: user.id },
-    JWT_SECRET,
+    { userId: user.id, tokenType: 'refresh' },
+    REFRESH_JWT_SECRET,
     { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
   );
 
@@ -169,12 +169,16 @@ const refreshToken = async ({ refreshToken: token }) => {
   
   let decoded;
   try {
-    decoded = jwt.verify(token, JWT_SECRET);
+    decoded = jwt.verify(token, REFRESH_JWT_SECRET);
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
       await prisma.refreshToken.deleteMany({ where: { token: tokenHash } });
       throw new AppError('Refresh token expired', 401);
     }
+    throw new AppError('Invalid refresh token', 401);
+  }
+
+  if (decoded.tokenType !== 'refresh') {
     throw new AppError('Invalid refresh token', 401);
   }
 

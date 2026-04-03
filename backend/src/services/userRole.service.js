@@ -42,6 +42,18 @@ const assignRoles = async (id, { roleIds }) => {
 
   const roleIdsArray = Array.from(new Set(roleIds));
 
+  if (roleIdsArray.length > 0) {
+    const existingRoles = await prisma.role.findMany({
+      where: { id: { in: roleIdsArray } },
+      select: { id: true }
+    });
+    const existingIds = new Set(existingRoles.map(r => r.id));
+    const unknown = roleIdsArray.filter(rid => !existingIds.has(rid));
+    if (unknown.length) {
+      throw new AppError(`Unknown roleIds: ${unknown.join(',')}`, 400);
+    }
+  }
+
   const user = await prisma.$transaction(async (tx) => {
     await tx.userRole.deleteMany({
       where: { userId: id }

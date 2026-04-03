@@ -17,9 +17,14 @@ const DEFAULT_REFRESH_TOKEN_EXPIRES_IN = '7d';
 
 const getConfig = () => {
   const JWT_SECRET = process.env.JWT_SECRET;
+  const REFRESH_JWT_SECRET = process.env.REFRESH_JWT_SECRET;
   
   if (!JWT_SECRET) {
     throw new Error('JWT_SECRET is not defined in environment variables');
+  }
+  
+  if (!REFRESH_JWT_SECRET) {
+    throw new Error('REFRESH_JWT_SECRET is not defined in environment variables');
   }
 
   const nodeEnv = process.env.NODE_ENV || DEFAULT_NODE_ENV;
@@ -52,6 +57,7 @@ const getConfig = () => {
   
   return {
     JWT_SECRET,
+    REFRESH_JWT_SECRET,
     nodeEnv,
     port,
     databaseUrl,
