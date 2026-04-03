@@ -36,7 +36,7 @@ const MAX_LIMIT = 100;
  * @returns {Promise<{users: Array<Object>, pagination: {page: number, limit: number, total: number, totalPages: number}}>} Object containing users array and pagination info
  * @throws {Error} Throws Prisma errors or other runtime errors
  */
-const findAll = async ({ page = DEFAULT_PAGE, limit = DEFAULT_LIMIT }) => {
+  const findAll = async ({ page = DEFAULT_PAGE, limit = DEFAULT_LIMIT }) => {
   const parsedPage = Number.parseInt(page, 10) || DEFAULT_PAGE;
   const parsedLimit = Number.parseInt(limit, 10) || DEFAULT_LIMIT;
   const normalizedPage = Math.max(DEFAULT_PAGE, parsedPage);
@@ -82,7 +82,7 @@ const findAll = async ({ page = DEFAULT_PAGE, limit = DEFAULT_LIMIT }) => {
  * const user = await findById('user-123');
  */
 const findById = async (id) => {
-  return prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id },
     select: {
       id: true,
@@ -92,6 +92,10 @@ const findById = async (id) => {
       updatedAt: true,
     },
   });
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+  return user;
 };
 
 /**
@@ -127,6 +131,13 @@ const findByEmail = async (email) => {
  * @throws {Error} Throws validation errors or Prisma errors (e.g., unique constraint violation)
  */
 const create = async (data) => {
+  const existingUser = await prisma.user.findUnique({
+    where: { email: data.email },
+  });
+  if (existingUser) {
+    throw new AppError('Email already exists', 409);
+  }
+
   const hashedPassword = await bcrypt.hash(data.password, SALT_ROUNDS);
 
   return prisma.user.create({

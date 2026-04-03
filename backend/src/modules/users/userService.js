@@ -6,23 +6,24 @@ const bcrypt = require('bcrypt');
 const prisma = require('../../lib/prisma');
 const { invalidateUserCache } = require('../../config/cache');
 const AppError = require('../../core/errors/AppError');
+const { logger } = require('../../config/logger');
+
+const safeInvalidateUserCache = (userId) => {
+  try {
+    invalidateUserCache(userId);
+  } catch (error) {
+    logger.error('Failed to invalidate user cache', {
+      userId,
+      message: error.message
+    });
+  }
+};
 
 /**
  * Get all users (with pagination and filters)
  */
 const getAllUsers = async ({ page = 1, limit = 10, status, search }) => {
-  const pageNum = parseInt(page, 10);
-  const limitNum = parseInt(limit, 10);
-
-  if (!Number.isFinite(pageNum) || pageNum < 1) {
-    throw new AppError('Invalid page parameter. Must be a positive integer.', 400);
-  }
-
-  if (!Number.isFinite(limitNum) || limitNum < 1 || limitNum > 100) {
-    throw new AppError('Invalid limit parameter. Must be between 1 and 100.', 400);
-  }
-
-  const skip = (pageNum - 1) * limitNum;
+  const skip = (page - 1) * limit;
 
   const where = {};
   
@@ -41,7 +42,7 @@ const getAllUsers = async ({ page = 1, limit = 10, status, search }) => {
     prisma.user.findMany({
       where,
       skip,
-      take: limitNum,
+      take: limit,
       orderBy: { createdAt: 'desc' },
       include: {
         roles: {
@@ -67,10 +68,10 @@ const getAllUsers = async ({ page = 1, limit = 10, status, search }) => {
       }))
     })),
     pagination: {
-      page: pageNum,
-      limit: limitNum,
+      page,
+      limit,
       total,
-      totalPages: Math.ceil(total / limitNum)
+      totalPages: Math.ceil(total / limit)
     }
   };
 };
@@ -240,7 +241,7 @@ const updateUser = async (id, { name, email }) => {
     }
   });
 
-  invalidateUserCache(id);
+  safeInvalidateUserCache(id);
 
   return {
     id: user.id,
@@ -267,8 +268,8 @@ const approveUser = async (id, { roleIds }) => {
     throw new AppError('User not found', 404);
   }
 
-  if (existingUser.status === 'ACTIVE') {
-    throw new AppError('User is already active', 400);
+  if (existingUser.status !== 'PENDING') {
+    throw new AppError('Only pending users can be approved', 400);
   }
 
   const roleIdsArray = Array.isArray(roleIds) ? roleIds : [];
@@ -290,7 +291,7 @@ const approveUser = async (id, { roleIds }) => {
     }
   });
 
-  invalidateUserCache(id);
+  safeInvalidateUserCache(id);
 
   return {
     id: user.id,
@@ -317,6 +318,10 @@ const rejectUser = async (id) => {
     throw new AppError('User not found', 404);
   }
 
+  if (existingUser.status !== 'PENDING') {
+    throw new AppError('Only pending users can be rejected', 400);
+  }
+
   const user = await prisma.user.update({
     where: { id },
     data: { status: 'REJECTED' },
@@ -329,7 +334,7 @@ const rejectUser = async (id) => {
     }
   });
 
-  invalidateUserCache(id);
+  safeInvalidateUserCache(id);
 
   return {
     id: user.id,
@@ -347,6 +352,14 @@ const rejectUser = async (id) => {
  * Assign roles to user
  */
 const assignRoles = async (id, { roleIds }) => {
+  const existingUser = await prisma.user.findUnique({
+    where: { id }
+  });
+
+  if (!existingUser) {
+    throw new AppError('User not found', 404);
+  }
+
   const roleIdsArray = Array.isArray(roleIds) ? roleIds : [];
 
   const user = await prisma.$transaction(async (tx) => {
@@ -371,7 +384,7 @@ const assignRoles = async (id, { roleIds }) => {
     });
   });
 
-  invalidateUserCache(id);
+  safeInvalidateUserCache(id);
 
   return {
     id: user.id,
@@ -401,7 +414,7 @@ const deleteUser = async (id) => {
     where: { id }
   });
 
-  invalidateUserCache(id);
+  safeInvalidateUserCache(id);
 
   return { message: 'User deleted successfully' };
 };

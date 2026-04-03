@@ -10,21 +10,20 @@ const { rbacMiddleware } = require('../../core/middleware/rbac.middleware');
 const { body, param, validationResult } = require('express-validator');
 
 const validate = (validations) => async (req, res, next) => {
-  for (const validation of validations) {
-    await validation.run(req);
+  try {
+    for (const validation of validations) {
+      await validation.run(req);
+    }
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const AppError = require('../../core/errors/AppError');
+      const error = new AppError(errors.array()[0].msg, 400);
+      return next(error);
+    }
+    next();
+  } catch (err) {
+    next(err);
   }
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: {
-        message: errors.array()[0].msg,
-        code: 'VALIDATION_ERROR'
-      }
-    });
-  }
-  next();
 };
 
 const createUserValidation = validate([
@@ -33,8 +32,11 @@ const createUserValidation = validate([
   body('name').optional().isString()
 ]);
 
+const userIdValidation = validate([
+  param('id').isUUID().withMessage('Valid user ID is required')
+]);
+
 const updateUserValidation = validate([
-  param('id').isUUID().withMessage('Valid user ID is required'),
   body('email').optional().isEmail().withMessage('Valid email is required'),
   body('name').optional().isString()
 ]);
@@ -53,24 +55,24 @@ router.get('/stats', rbacMiddleware('users', 'view'), userController.getStats);
 router.get('/pending', rbacMiddleware('users', 'view'), userController.getPendingUsers);
 
 // GET /api/v1/users/:id - Get user by ID (requires users:view)
-router.get('/:id', rbacMiddleware('users', 'view'), userController.getUserById);
+router.get('/:id', rbacMiddleware('users', 'view'), userIdValidation, userController.getUserById);
 
 // POST /api/v1/users - Create user (requires users:create)
 router.post('/', rbacMiddleware('users', 'create'), createUserValidation, userController.createUser);
 
 // PUT /api/v1/users/:id - Update user (requires users:edit)
-router.put('/:id', rbacMiddleware('users', 'edit'), updateUserValidation, userController.updateUser);
+router.put('/:id', rbacMiddleware('users', 'edit'), userIdValidation, updateUserValidation, userController.updateUser);
 
 // PUT /api/v1/users/:id/approve - Approve user (requires users:edit)
-router.put('/:id/approve', rbacMiddleware('users', 'edit'), userController.approveUser);
+router.put('/:id/approve', rbacMiddleware('users', 'edit'), userIdValidation, userController.approveUser);
 
 // PUT /api/v1/users/:id/reject - Reject user (requires users:edit)
-router.put('/:id/reject', rbacMiddleware('users', 'edit'), userController.rejectUser);
+router.put('/:id/reject', rbacMiddleware('users', 'edit'), userIdValidation, userController.rejectUser);
 
 // PUT /api/v1/users/:id/roles - Assign roles (requires users:edit)
-router.put('/:id/roles', rbacMiddleware('users', 'edit'), userController.assignRoles);
+router.put('/:id/roles', rbacMiddleware('users', 'edit'), userIdValidation, userController.assignRoles);
 
 // DELETE /api/v1/users/:id - Delete user (requires users:delete)
-router.delete('/:id', rbacMiddleware('users', 'delete'), userController.deleteUser);
+router.delete('/:id', rbacMiddleware('users', 'delete'), userIdValidation, userController.deleteUser);
 
 module.exports = router;

@@ -3,7 +3,8 @@
  * @description User Controller - Handle user management routes
  */
 const userService = require('./userService');
-const catchAsync = require('../../core/middleware/catchAsync');
+const catchAsync = require('../../core/middleware/asyncHandler');
+const ApiResponse = require('../../core/utils/ApiResponse');
 
 /**
  * GET /api/v1/users
@@ -15,22 +16,6 @@ const getAllUsers = catchAsync(async (req, res) => {
   const pageNum = parseInt(page, 10);
   const limitNum = parseInt(limit, 10);
 
-  if (isNaN(pageNum) || pageNum < 1) {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: { message: 'Invalid page parameter. Must be a positive integer.', code: 'VALIDATION_ERROR' }
-    });
-  }
-
-  if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
-    return res.status(400).json({
-      success: false,
-      data: null,
-      error: { message: 'Invalid limit parameter. Must be between 1 and 100.', code: 'VALIDATION_ERROR' }
-    });
-  }
-
   const result = await userService.getAllUsers({
     page: pageNum,
     limit: limitNum,
@@ -38,11 +23,7 @@ const getAllUsers = catchAsync(async (req, res) => {
     search
   });
 
-  res.status(200).json({
-    success: true,
-    data: result,
-    error: null
-  });
+  ApiResponse.success(res, result);
 });
 
 /**
@@ -51,12 +32,7 @@ const getAllUsers = catchAsync(async (req, res) => {
  */
 const getPendingUsers = catchAsync(async (req, res) => {
   const users = await userService.getPendingUsers();
-
-  res.status(200).json({
-    success: true,
-    data: { users },
-    error: null
-  });
+  ApiResponse.success(res, { users });
 });
 
 /**
@@ -65,12 +41,7 @@ const getPendingUsers = catchAsync(async (req, res) => {
  */
 const getStats = catchAsync(async (req, res) => {
   const stats = await userService.getStats();
-
-  res.status(200).json({
-    success: true,
-    data: stats,
-    error: null
-  });
+  ApiResponse.success(res, stats);
 });
 
 /**
@@ -79,12 +50,7 @@ const getStats = catchAsync(async (req, res) => {
  */
 const getUserById = catchAsync(async (req, res) => {
   const user = await userService.getUserById(req.params.id);
-
-  res.status(200).json({
-    success: true,
-    data: { user },
-    error: null
-  });
+  ApiResponse.success(res, { user });
 });
 
 /**
@@ -93,14 +59,8 @@ const getUserById = catchAsync(async (req, res) => {
  */
 const createUser = catchAsync(async (req, res) => {
   const { email, password, name, roleIds } = req.body;
-
   const user = await userService.createUser({ email, password, name, roleIds });
-
-  res.status(201).json({
-    success: true,
-    data: { user },
-    error: null
-  });
+  ApiResponse.success(res, { user }, 201);
 });
 
 /**
@@ -109,14 +69,8 @@ const createUser = catchAsync(async (req, res) => {
  */
 const updateUser = catchAsync(async (req, res) => {
   const { name, email } = req.body;
-
   const user = await userService.updateUser(req.params.id, { name, email });
-
-  res.status(200).json({
-    success: true,
-    data: { user },
-    error: null
-  });
+  ApiResponse.success(res, { user });
 });
 
 /**
@@ -125,14 +79,8 @@ const updateUser = catchAsync(async (req, res) => {
  */
 const approveUser = catchAsync(async (req, res) => {
   const { roleIds } = req.body;
-
   const user = await userService.approveUser(req.params.id, { roleIds });
-
-  res.status(200).json({
-    success: true,
-    data: { user, message: 'User approved successfully' },
-    error: null
-  });
+  ApiResponse.success(res, { user, message: 'User approved successfully' });
 });
 
 /**
@@ -141,12 +89,7 @@ const approveUser = catchAsync(async (req, res) => {
  */
 const rejectUser = catchAsync(async (req, res) => {
   const user = await userService.rejectUser(req.params.id);
-
-  res.status(200).json({
-    success: true,
-    data: { user, message: 'User rejected' },
-    error: null
-  });
+  ApiResponse.success(res, { user, message: 'User rejected' });
 });
 
 /**
@@ -155,14 +98,8 @@ const rejectUser = catchAsync(async (req, res) => {
  */
 const assignRoles = catchAsync(async (req, res) => {
   const { roleIds } = req.body;
-
   const user = await userService.assignRoles(req.params.id, { roleIds });
-
-  res.status(200).json({
-    success: true,
-    data: { user },
-    error: null
-  });
+  ApiResponse.success(res, { user });
 });
 
 /**
@@ -171,12 +108,7 @@ const assignRoles = catchAsync(async (req, res) => {
  */
 const deleteUser = catchAsync(async (req, res) => {
   await userService.deleteUser(req.params.id);
-
-  res.status(200).json({
-    success: true,
-    data: { message: 'User deleted successfully' },
-    error: null
-  });
+  ApiResponse.success(res, { message: 'User deleted successfully' });
 });
 
 module.exports = {
