@@ -5,11 +5,15 @@
 
 const bcrypt = require('bcrypt');
 const { Prisma } = require('@prisma/client');
+
 const prisma = require('../lib/prisma');
 const AppError = require('../core/errors/AppError');
 const { invalidateUserCache } = require('../config/cache');
 
 const SALT_ROUNDS = 10;
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
 
 /**
  * User service for managing user CRUD operations.
@@ -32,11 +36,11 @@ const SALT_ROUNDS = 10;
  * @returns {Promise<{users: Array<Object>, pagination: {page: number, limit: number, total: number, totalPages: number}}>} Object containing users array and pagination info
  * @throws {Error} Throws Prisma errors or other runtime errors
  */
-const findAll = async ({ page = 1, limit = 20 }) => {
-  const parsedPage = Number.parseInt(page, 10) || 1;
-  const parsedLimit = Number.parseInt(limit, 10) || 20;
-  const normalizedPage = Math.max(1, parsedPage);
-  const normalizedLimit = Math.min(Math.max(1, parsedLimit), 100);
+const findAll = async ({ page = DEFAULT_PAGE, limit = DEFAULT_LIMIT }) => {
+  const parsedPage = Number.parseInt(page, 10) || DEFAULT_PAGE;
+  const parsedLimit = Number.parseInt(limit, 10) || DEFAULT_LIMIT;
+  const normalizedPage = Math.max(DEFAULT_PAGE, parsedPage);
+  const normalizedLimit = Math.min(Math.max(DEFAULT_PAGE, parsedLimit), MAX_LIMIT);
   const skip = (normalizedPage - 1) * normalizedLimit;
   const take = normalizedLimit;
 
