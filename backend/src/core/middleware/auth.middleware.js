@@ -14,6 +14,10 @@ if (!JWT_SECRET) {
   throw new Error('JWT_SECRET is not defined in environment variables');
 }
 
+const CACHE_TTL_SECONDS = 300;
+
+const USER_STATUS_ACTIVE = 'ACTIVE';
+
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -112,7 +116,7 @@ const authMiddleware = async (req, res, next) => {
       userCache.set(cacheKey, userData, CACHE_TTL_SECONDS);
     }
 
-    if (userData.status !== 'ACTIVE') {
+    if (userData.status !== USER_STATUS_ACTIVE) {
       return res.status(403).json({
         success: false,
         data: null,
