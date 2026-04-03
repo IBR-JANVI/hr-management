@@ -7,7 +7,12 @@ const prisma = require('../../lib/prisma');
 const { getConfig } = require('../../config/env');
 const { userCache } = require('../../config/cache');
 
-const { JWT_SECRET } = getConfig();
+const config = getConfig();
+const { JWT_SECRET, nodeEnv: NODE_ENV } = config;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET is not defined in environment variables');
+}
 
 const CACHE_TTL_SECONDS = 300;
 
@@ -45,6 +50,14 @@ const authMiddleware = async (req, res, next) => {
     }
 
     return next(error);
+  }
+
+  if (!decoded || typeof decoded.userId !== 'string') {
+    return res.status(401).json({
+      success: false,
+      data: null,
+      error: { message: 'Invalid token payload' }
+    });
   }
 
   try {
