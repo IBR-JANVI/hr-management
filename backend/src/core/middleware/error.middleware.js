@@ -49,10 +49,6 @@ const errorMiddleware = (err, req, res, next) => {
     message = 'Token expired';
   }
 
-  if (statusCode >= 500 && nodeEnv !== 'development' && !err.isOperational) {
-    message = 'Internal Server Error';
-  }
-
   res.status(statusCode).json({
     success: false,
     data: null,

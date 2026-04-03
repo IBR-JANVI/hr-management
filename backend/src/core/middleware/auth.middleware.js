@@ -5,8 +5,11 @@
 const jwt = require('jsonwebtoken');
 const prisma = require('../../lib/prisma');
 const { getConfig } = require('../../config/env');
+const { userCache } = require('../../config/cache');
 
 const { JWT_SECRET } = getConfig();
+
+const CACHE_TTL_SECONDS = 300;
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -45,34 +48,60 @@ const authMiddleware = async (req, res, next) => {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      include: {
-        roles: {
-          include: {
-            role: {
-              include: {
-                permissions: {
-                  include: {
-                    permission: true
+    const cacheKey = `user:${decoded.userId}`;
+    let userData = userCache.get(cacheKey);
+
+    if (!userData) {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        include: {
+          roles: {
+            include: {
+              role: {
+                include: {
+                  permissions: {
+                    include: {
+                      permission: true
+                    }
                   }
                 }
               }
             }
           }
         }
-      }
-    });
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        data: null,
-        error: { message: 'User not found' }
       });
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          data: null,
+          error: { message: 'User not found' }
+        });
+      }
+
+      const permissions = user.roles.flatMap(ur => 
+        ur.role.permissions.map(rp => ({
+          module: rp.permission.module,
+          action: rp.permission.action
+        }))
+      );
+
+      const isSuperAdmin = user.roles.some(ur => ur.role.isSuperAdmin);
+
+      userData = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        status: user.status,
+        roles: user.roles.map(ur => ur.role),
+        permissions,
+        isSuperAdmin
+      };
+
+      userCache.set(cacheKey, userData, CACHE_TTL_SECONDS);
     }
 
-    if (user.status !== 'ACTIVE') {
+    if (userData.status !== 'ACTIVE') {
       return res.status(403).json({
         success: false,
         data: null,
@@ -80,22 +109,13 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    const permissions = user.roles.flatMap(ur => 
-      ur.role.permissions.map(rp => ({
-        module: rp.permission.module,
-        action: rp.permission.action
-      }))
-    );
-
-    const isSuperAdmin = user.roles.some(ur => ur.role.isSuperAdmin);
-
     req.user = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      roles: user.roles.map(ur => ur.role),
-      permissions,
-      isSuperAdmin
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      roles: userData.roles,
+      permissions: userData.permissions,
+      isSuperAdmin: userData.isSuperAdmin
     };
 
     next();
