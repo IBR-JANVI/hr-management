@@ -9,6 +9,12 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const { getConfig } = require('./config/env');
+const { logger } = require('./config/logger');
+const errorMiddleware = require('./core/middleware/error.middleware');
+const authRoutes = require('./routes/auth.routes');
+const userRoutes = require('./routes/user.routes');
+const roleRoutes = require('./routes/role.routes');
+const permissionRoutes = require('./routes/permission.routes');
 
 dotenv.config();
 
@@ -21,6 +27,8 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const AppError = require('./core/errors/AppError');
+
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/roles', roleRoutes);
@@ -30,18 +38,13 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.use(errorMiddleware);
-
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    data: null,
-    error: {
-      message: 'Route not found',
-      code: 'NOT_FOUND'
-    }
-  });
+app.use((req, res, next) => {
+  const err = new AppError('Route not found', 404);
+  err.code = 'NOT_FOUND';
+  next(err);
 });
+
+app.use(errorMiddleware);
 
 app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);

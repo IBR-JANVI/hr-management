@@ -26,7 +26,7 @@ const normalizePagination = (page = 1, limit = DEFAULT_LIMIT) => {
  * @returns {Promise<{roles: Array, pagination: Object}>}
  */
 const getAllRoles = async ({ page = 1, limit = DEFAULT_LIMIT } = {}) => {
-  const { skip, limit: take } = normalizePagination(page, limit);
+  const { skip, limit: take, page: normalizedPage } = normalizePagination(page, limit);
 
   const [roles, total] = await Promise.all([
     prisma.role.findMany({
@@ -63,7 +63,7 @@ const getAllRoles = async ({ page = 1, limit = DEFAULT_LIMIT } = {}) => {
       userCount: role._count.users
     })),
     pagination: {
-      page,
+      page: normalizedPage,
       limit: take,
       total,
       totalPages: Math.ceil(total / take)
@@ -190,9 +190,14 @@ const createRole = async ({ name, description, isDefault, permissionIds }) => {
  * @returns {Promise<Object>}
  * @throws {AppError} 404 - When role not found
  * @throws {AppError} 403 - Cannot modify super admin role
+ * @throws {AppError} 400 - When permissionIds is not an array
  * @throws {AppError} 409 - When role name already exists
  */
 const updateRole = async (id, { name, description, isDefault, permissionIds }) => {
+  if (permissionIds !== undefined && !Array.isArray(permissionIds)) {
+    throw new AppError('permissionIds must be an array', 400);
+  }
+
   const existingRole = await prisma.role.findUnique({
     where: { id }
   });
@@ -276,6 +281,14 @@ const updateRole = async (id, { name, description, isDefault, permissionIds }) =
   };
 };
 
+/**
+ * Deletes a role by ID
+ * @param {string} id - Role UUID
+ * @returns {Promise<{message: string}>} - Success message
+ * @throws {AppError} 404 - When role not found
+ * @throws {AppError} 403 - Cannot delete super admin role
+ * @throws {AppError} 400 - When role has assigned users
+ */
 const deleteRole = async (id) => {
   const existingRole = await prisma.role.findUnique({
     where: { id }
@@ -304,7 +317,19 @@ const deleteRole = async (id) => {
   return { message: 'Role deleted successfully' };
 };
 
+/**
+ * Assigns permissions to a role
+ * @param {string} id - Role UUID
+ * @param {Object} params - Parameters
+ * @param {Array<string>} params.permissionIds - Array of permission IDs to assign
+ * @returns {Promise<{id: string, name: string, permissions: Array}>} - Updated role with permissions
+ * @throws {AppError} 404 - When role not found
+ * @throws {AppError} 400 - When permissionIds is not an array
+ */
 const assignPermissions = async (id, { permissionIds }) => {
+  if (!Array.isArray(permissionIds)) {
+    throw new AppError('permissionIds must be an array', 400);
+  }
   const existingRole = await prisma.role.findUnique({
     where: { id }
   });

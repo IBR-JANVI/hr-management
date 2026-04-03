@@ -4,27 +4,11 @@
  */
 const express = require('express');
 const router = express.Router();
-const { body, param, validationResult } = require('express-validator');
+const { body, param } = require('express-validator');
+const { validate } = require('../middleware/validate');
 const roleController = require('../controllers/role.controller');
 const authMiddleware = require('../core/middleware/auth.middleware');
 const { rbacMiddleware } = require('../core/middleware/rbac.middleware');
-
-const validate = (validations) => async (req, res, next) => {
-  try {
-    for (const validation of validations) {
-      await validation.run(req);
-    }
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      const AppError = require('../core/errors/AppError');
-      const error = new AppError(errors.array()[0].msg, 400);
-      return next(error);
-    }
-    next();
-  } catch (err) {
-    next(err);
-  }
-};
 
 const createRoleValidator = validate([
   body('name').notEmpty().withMessage('Role name is required').isString(),

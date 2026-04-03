@@ -32,8 +32,17 @@ const safeInvalidateUserCache = (userId) => {
   }
 };
 
+/**
+ * Retrieves all users with pagination and optional filtering
+ * @param {Object} params - Query parameters
+ * @param {number} [params.page=1] - Page number
+ * @param {number} [params.limit=20] - Items per page
+ * @param {string} [params.status] - Filter by status (ACTIVE, PENDING, REJECTED)
+ * @param {string} [params.search] - Search by email or name
+ * @returns {Promise<{users: Array, pagination: Object}>} - List of users with pagination metadata
+ */
 const getAllUsers = async ({ page = 1, limit = DEFAULT_LIMIT, status, search }) => {
-  const { skip, limit: take } = normalizePagination(page, limit);
+  const { skip, limit: take, page: normalizedPage } = normalizePagination(page, limit);
 
   const where = {};
   
@@ -85,7 +94,7 @@ const getAllUsers = async ({ page = 1, limit = DEFAULT_LIMIT, status, search }) 
       }))
     })),
     pagination: {
-      page,
+      page: normalizedPage,
       limit: take,
       total,
       totalPages: Math.ceil(total / take)
@@ -93,54 +102,54 @@ const getAllUsers = async ({ page = 1, limit = DEFAULT_LIMIT, status, search }) 
   };
 };
 
+/**
+ * Retrieves all pending users with pagination
+ * @param {Object} params - Query parameters
+ * @param {number} [params.page=1] - Page number
+ * @param {number} [params.limit=20] - Items per page
+ * @returns {Promise<Array>} - Array of pending users
+ */
 const getPendingUsers = async ({ page = 1, limit = DEFAULT_LIMIT } = {}) => {
   const { skip, limit: take } = normalizePagination(page, limit);
 
-  const [users, total] = await Promise.all([
-    prisma.user.findMany({
-      where: { status: 'PENDING' },
-      skip,
-      take,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        status: true,
-        createdAt: true,
-        roles: {
-          include: {
-            role: {
-              select: { id: true, name: true }
-            }
+  const users = await prisma.user.findMany({
+    where: { status: 'PENDING' },
+    skip,
+    take,
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      status: true,
+      createdAt: true,
+      roles: {
+        include: {
+          role: {
+            select: { id: true, name: true }
           }
         }
       }
-    }),
-    prisma.user.count({ where: { status: 'PENDING' } })
-  ]);
-
-  return {
-    users: users.map(user => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      status: user.status,
-      createdAt: user.createdAt,
-      roles: user.roles.map(ur => ({
-        id: ur.role.id,
-        name: ur.role.name
-      }))
-    })),
-    pagination: {
-      page,
-      limit: take,
-      total,
-      totalPages: Math.ceil(total / take)
     }
-  };
+  });
+
+  return users.map(user => ({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    status: user.status,
+    createdAt: user.createdAt,
+    roles: user.roles.map(ur => ({
+      id: ur.role.id,
+      name: ur.role.name
+    }))
+  }));
 };
 
+/**
+ * Gets user statistics counts
+ * @returns {Promise<{totalUsers: number, activeUsers: number, pendingUsers: number, rejectedUsers: number}>} - User statistics
+ */
 const getStats = async () => {
   const [totalUsers, activeUsers, pendingUsers, rejectedUsers] = await Promise.all([
     prisma.user.count(),
@@ -157,6 +166,12 @@ const getStats = async () => {
   };
 };
 
+/**
+ * Retrieves a single user by ID
+ * @param {string} id - User UUID
+ * @returns {Promise<{id: string, email: string, name: string, status: string, createdAt: Date, roles: Array, permissions: Array}>} - User with roles and permissions
+ * @throws {AppError} 404 - User not found
+ */
 const getUserById = async (id) => {
   const user = await prisma.user.findUnique({
     where: { id },
@@ -205,6 +220,16 @@ const getUserById = async (id) => {
   };
 };
 
+/**
+ * Creates a new user
+ * @param {Object} params - User data
+ * @param {string} params.email - User's email
+ * @param {string} params.password - User's password
+ * @param {string} params.name - User's name
+ * @param {Array<string>} [params.roleIds] - Array of role IDs to assign
+ * @returns {Promise<{id: string, email: string, name: string, status: string, createdAt: Date, roles: Array}>} - Created user
+ * @throws {AppError} 409 - Email already registered
+ */
 const createUser = async ({ email, password, name, roleIds }) => {
   const existingUser = await prisma.user.findUnique({
     where: { email }
@@ -216,7 +241,7 @@ const createUser = async ({ email, password, name, roleIds }) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const roleIdsArray = Array.isArray(roleIds) ? roleIds : [];
+  const roleIdsArray = Array.isArray(roleIds) ? Array.from(new Set(roleIds)) : [];
 
   const user = await prisma.user.create({
     data: {
@@ -250,6 +275,16 @@ const createUser = async ({ email, password, name, roleIds }) => {
   };
 };
 
+/**
+ * Updates an existing user
+ * @param {string} id - User UUID
+ * @param {Object} data - Update data
+ * @param {string} [data.name] - New name
+ * @param {string} [data.email] - New email
+ * @returns {Promise<{id: string, email: string, name: string, status: string, createdAt: Date, roles: Array}>} - Updated user
+ * @throws {AppError} 404 - User not found
+ * @throws {AppError} 409 - Email already in use
+ */
 const updateUser = async (id, { name, email }) => {
   const existingUser = await prisma.user.findUnique({
     where: { id }
@@ -299,6 +334,15 @@ const updateUser = async (id, { name, email }) => {
   };
 };
 
+/**
+ * Approves a pending user
+ * @param {string} id - User UUID
+ * @param {Object} params - Parameters
+ * @param {Array<string>} [params.roleIds] - Array of role IDs to assign
+ * @returns {Promise<{id: string, email: string, name: string, status: string, createdAt: Date, roles: Array}>} - Approved user
+ * @throws {AppError} 404 - User not found
+ * @throws {AppError} 400 - Only pending users can be approved
+ */
 const approveUser = async (id, { roleIds }) => {
   const roleIdsArray = Array.isArray(roleIds) ? Array.from(new Set(roleIds)) : [];
 
@@ -357,6 +401,13 @@ const approveUser = async (id, { roleIds }) => {
   };
 };
 
+/**
+ * Rejects a pending user
+ * @param {string} id - User UUID
+ * @returns {Promise<{id: string, email: string, name: string, status: string, createdAt: Date, roles: Array}>} - Rejected user
+ * @throws {AppError} 404 - User not found
+ * @throws {AppError} 400 - Only pending users can be rejected
+ */
 const rejectUser = async (id) => {
   const user = await prisma.$transaction(async (tx) => {
     const result = await tx.user.updateMany({
@@ -406,7 +457,20 @@ const rejectUser = async (id) => {
   };
 };
 
-  const assignRoles = async (id, { roleIds }) => {
+/**
+ * Assigns roles to a user
+ * @param {string} id - User UUID
+ * @param {Object} params - Parameters
+ * @param {Array<string>} params.roleIds - Array of role IDs to assign
+ * @returns {Promise<{id: string, email: string, name: string, status: string, roles: Array}>} - Updated user
+ * @throws {AppError} 404 - User not found
+ * @throws {AppError} 400 - roleIds must be an array
+ */
+const assignRoles = async (id, { roleIds }) => {
+  if (!Array.isArray(roleIds)) {
+    throw new AppError('roleIds must be an array', 400);
+  }
+
   const existingUser = await prisma.user.findUnique({
     where: { id }
   });
@@ -415,7 +479,7 @@ const rejectUser = async (id) => {
     throw new AppError('User not found', 404);
   }
 
-  const roleIdsArray = Array.isArray(roleIds) ? roleIds : [];
+  const roleIdsArray = Array.from(new Set(roleIds));
 
   const user = await prisma.$transaction(async (tx) => {
     await tx.userRole.deleteMany({
@@ -453,6 +517,12 @@ const rejectUser = async (id) => {
   };
 };
 
+/**
+ * Deletes a user
+ * @param {string} id - User UUID
+ * @returns {Promise<{message: string}>} - Success message
+ * @throws {AppError} 404 - User not found
+ */
 const deleteUser = async (id) => {
   const existingUser = await prisma.user.findUnique({
     where: { id }
