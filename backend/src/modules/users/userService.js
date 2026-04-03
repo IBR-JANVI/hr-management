@@ -1,15 +1,28 @@
 /**
- * User Service - Business logic for user management
+ * @module userService
+ * @description User Service - Business logic for user management
  */
 const bcrypt = require('bcrypt');
 const prisma = require('../../lib/prisma');
 const { invalidateUserCache } = require('../../config/cache');
+const AppError = require('../../core/errors/AppError');
 
 /**
  * Get all users (with pagination and filters)
  */
 const getAllUsers = async ({ page = 1, limit = 10, status, search }) => {
-  const skip = (page - 1) * limit;
+  const pageNum = parseInt(page, 10);
+  const limitNum = parseInt(limit, 10);
+
+  if (!Number.isFinite(pageNum) || pageNum < 1) {
+    throw new AppError('Invalid page parameter. Must be a positive integer.', 400);
+  }
+
+  if (!Number.isFinite(limitNum) || limitNum < 1 || limitNum > 100) {
+    throw new AppError('Invalid limit parameter. Must be between 1 and 100.', 400);
+  }
+
+  const skip = (pageNum - 1) * limitNum;
 
   const where = {};
   
@@ -28,7 +41,7 @@ const getAllUsers = async ({ page = 1, limit = 10, status, search }) => {
     prisma.user.findMany({
       where,
       skip,
-      take: limit,
+      take: limitNum,
       orderBy: { createdAt: 'desc' },
       include: {
         roles: {
@@ -54,10 +67,10 @@ const getAllUsers = async ({ page = 1, limit = 10, status, search }) => {
       }))
     })),
     pagination: {
-      page,
-      limit,
+      page: pageNum,
+      limit: limitNum,
       total,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limitNum)
     }
   };
 };
@@ -115,9 +128,7 @@ const getUserById = async (id) => {
   });
 
   if (!user) {
-    const error = new Error('User not found');
-    error.statusCode = 404;
-    throw error;
+    throw new AppError('User not found', 404);
   }
 
   const roles = user.roles.map(ur => ({
@@ -148,21 +159,18 @@ const getUserById = async (id) => {
  * Create user (admin only)
  */
 const createUser = async ({ email, password, name, roleIds }) => {
-  // Check if user already exists
   const existingUser = await prisma.user.findUnique({
     where: { email }
   });
 
   if (existingUser) {
-    const error = new Error('Email already registered');
-    error.statusCode = 409;
-    throw error;
+    throw new AppError('Email already registered', 409);
   }
 
-  // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Create user with roles
+  const roleIdsArray = Array.isArray(roleIds) ? roleIds : [];
+
   const user = await prisma.user.create({
     data: {
       email,
@@ -170,7 +178,7 @@ const createUser = async ({ email, password, name, roleIds }) => {
       name,
       status: 'ACTIVE',
       roles: {
-        create: roleIds.map(roleId => ({ roleId }))
+        create: roleIdsArray.map(roleId => ({ roleId }))
       }
     },
     include: {
@@ -199,27 +207,21 @@ const createUser = async ({ email, password, name, roleIds }) => {
  * Update user
  */
 const updateUser = async (id, { name, email }) => {
-  // Check if user exists
   const existingUser = await prisma.user.findUnique({
     where: { id }
   });
 
   if (!existingUser) {
-    const error = new Error('User not found');
-    error.statusCode = 404;
-    throw error;
+    throw new AppError('User not found', 404);
   }
 
-  // Check if email is taken by another user
   if (email && email !== existingUser.email) {
     const emailExists = await prisma.user.findUnique({
       where: { email }
     });
 
     if (emailExists) {
-      const error = new Error('Email already in use');
-      error.statusCode = 409;
-      throw error;
+      throw new AppError('Email already in use', 409);
     }
   }
 
@@ -257,30 +259,26 @@ const updateUser = async (id, { name, email }) => {
  * Approve user (set status to ACTIVE and assign role)
  */
 const approveUser = async (id, { roleIds }) => {
-  // Check if user exists
   const existingUser = await prisma.user.findUnique({
     where: { id }
   });
 
   if (!existingUser) {
-    const error = new Error('User not found');
-    error.statusCode = 404;
-    throw error;
+    throw new AppError('User not found', 404);
   }
 
   if (existingUser.status === 'ACTIVE') {
-    const error = new Error('User is already active');
-    error.statusCode = 400;
-    throw error;
+    throw new AppError('User is already active', 400);
   }
 
-  // Update user status and assign roles
+  const roleIdsArray = Array.isArray(roleIds) ? roleIds : [];
+
   const user = await prisma.user.update({
     where: { id },
     data: {
       status: 'ACTIVE',
       roles: {
-        create: roleIds.map(roleId => ({ roleId }))
+        create: roleIdsArray.map(roleId => ({ roleId }))
       }
     },
     include: {
@@ -311,6 +309,14 @@ const approveUser = async (id, { roleIds }) => {
  * Reject user
  */
 const rejectUser = async (id) => {
+  const existingUser = await prisma.user.findUnique({
+    where: { id }
+  });
+
+  if (!existingUser) {
+    throw new AppError('User not found', 404);
+  }
+
   const user = await prisma.user.update({
     where: { id },
     data: { status: 'REJECTED' },
@@ -341,29 +347,30 @@ const rejectUser = async (id) => {
  * Assign roles to user
  */
 const assignRoles = async (id, { roleIds }) => {
-  // Delete existing roles
-  await prisma.userRole.deleteMany({
-    where: { userId: id }
-  });
+  const roleIdsArray = Array.isArray(roleIds) ? roleIds : [];
 
-  // Assign new roles
-  const user = await prisma.user.update({
-    where: { id },
-    data: {
-      roles: {
-        create: roleIds.map(roleId => ({ roleId }))
-      }
-    },
-    include: {
-      roles: {
-        include: {
-          role: true
+  const user = await prisma.$transaction(async (tx) => {
+    await tx.userRole.deleteMany({
+      where: { userId: id }
+    });
+
+    return tx.user.update({
+      where: { id },
+      data: {
+        roles: {
+          create: roleIdsArray.map(roleId => ({ roleId }))
+        }
+      },
+      include: {
+        roles: {
+          include: {
+            role: true
+          }
         }
       }
-    }
+    });
   });
 
-  // Invalidate cache for this user
   invalidateUserCache(id);
 
   return {
@@ -382,15 +389,12 @@ const assignRoles = async (id, { roleIds }) => {
  * Delete user
  */
 const deleteUser = async (id) => {
-  // Check if user exists
   const existingUser = await prisma.user.findUnique({
     where: { id }
   });
 
   if (!existingUser) {
-    const error = new Error('User not found');
-    error.statusCode = 404;
-    throw error;
+    throw new AppError('User not found', 404);
   }
 
   await prisma.user.delete({
