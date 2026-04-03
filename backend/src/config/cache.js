@@ -24,7 +24,7 @@ class Cache {
           this.store.delete(key);
         }
       }
-    }, this.cleanupIntervalMs);
+    }, this.cleanupIntervalMs).unref();
   }
 
   stopCleanup() {

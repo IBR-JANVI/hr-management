@@ -6,26 +6,27 @@
 const winston = require('winston');
 const { getConfig } = require('./env');
 
-const { nodeEnv } = getConfig();
+const { nodeEnv,logLevel  } = getConfig();
+const isProduction = nodeEnv === 'production';
 
 const logger = winston.createLogger({
-  level: nodeEnv === 'production' ? 'info' : 'debug',
+  level: logLevel || (isProduction ? 'info' : 'debug'),
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.json()
   ),
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
-    })
-  ]
+ transports: isProduction
+  ? [new winston.transports.File({ filename: 'logs/error.log', level: 'error' })]
+  : [
+      new winston.transports.Console({
+        format: winston.format.combine(
+          winston.format.colorize(),
+          winston.format.simple()
+        ),
+      }),
+    ],
+ 
 });
 
-if (nodeEnv === 'production') {
-  logger.add(new winston.transports.File({ filename: 'logs/error.log' }));
-}
 
 module.exports = { logger };
