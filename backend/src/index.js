@@ -50,8 +50,10 @@ app.use((req, res, next) => {
 
 app.use(errorMiddleware);
 
-app.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    logger.info(`Server running on port ${PORT}`);
+  });
+}
 
 module.exports = app;

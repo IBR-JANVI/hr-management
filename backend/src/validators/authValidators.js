@@ -23,13 +23,13 @@ const validate = (validations) => async (req, res, next) => {
 
 const registerValidator = validate([
   body('email').isEmail().withMessage('Valid email is required'),
-  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
-  body('name').notEmpty().withMessage('Name is required')
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters').isString(),
+  body('name').notEmpty().withMessage('Name is required').isString()
 ]);
 
 const loginValidator = validate([
   body('email').isEmail().withMessage('Valid email is required'),
-  body('password').notEmpty().withMessage('Password is required')
+  body('password').notEmpty().withMessage('Password is required').isString()
 ]);
 
 const refreshValidator = validate([

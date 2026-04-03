@@ -149,6 +149,9 @@ const updatePermission = async (id, { module, action }) => {
   }
 
   if (module !== undefined) {
+    if (typeof module !== 'string') {
+      throw new AppError('Module must be a string', 400);
+    }
     const trimmedModule = module.trim();
     if (!trimmedModule) {
       throw new AppError('Module cannot be empty', 400);
@@ -157,6 +160,9 @@ const updatePermission = async (id, { module, action }) => {
   }
 
   if (action !== undefined) {
+    if (typeof action !== 'string') {
+      throw new AppError('Action must be a string', 400);
+    }
     const trimmedAction = action.trim();
     if (!trimmedAction) {
       throw new AppError('Action cannot be empty', 400);
