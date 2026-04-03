@@ -15,6 +15,10 @@ const errorMiddleware = (err, req, res, next) => {
     method: req.method
   });
 
+  if (res.headersSent) {
+    return next(err);
+  }
+
   let statusCode = err.statusCode || 500;
   let message;
 
