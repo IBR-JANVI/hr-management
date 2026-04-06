@@ -67,10 +67,6 @@ export const logout = createAsyncThunk(
       return { success: true };
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
-    } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
     }
   }
 );

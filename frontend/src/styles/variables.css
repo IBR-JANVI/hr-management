@@ -20,7 +20,10 @@
   --color-text-inverse: #ffffff;
   --color-on-primary: #ffffff;
   --color-on-error: #ffffff;
-  --color-overlay-bg: rgba(0, 0, 0, 0.5);
+  --color-on-success: #ffffff;
+  --color-on-warning: #ffffff;
+  --color-text-700: #374151;
+  --label-width: var(--spacing-6);
   --color-bg: #ffffff;
   --color-sidebar-bg: #1f2937;
 
