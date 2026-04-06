@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import { login, clearAuthError } from '../store/slices/authSlice';
+import { login, clearAuthError } from '../../store/slices/authSlice';
+import styles from './index.module.css';
+import { classNames } from '../../utils/helpers';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -24,10 +26,11 @@ function Login() {
   useEffect(() => {
     if (error) {
       const errorMessage = error?.error?.message || error?.message || 'Login failed';
+      const normalized = String(errorMessage).toLowerCase();
       
-      if (errorMessage.toLowerCase().includes('not active') || errorMessage.toLowerCase().includes('approval')) {
+      if (normalized.includes('not active') || normalized.includes('approval')) {
         toast.error('Your account is not approved yet. Please contact admin.');
-      } else if (errorMessage.toLowerCase().includes('invalid') || errorMessage.toLowerCase().includes('credentials')) {
+      } else if (normalized.includes('invalid') || normalized.includes('credentials')) {
         toast.error('Invalid email or password');
       } else {
         toast.error(errorMessage);
@@ -67,20 +70,24 @@ function Login() {
       return;
     }
     
-    dispatch(login({ email: email.trim(), password }));
+    try {
+      await dispatch(login({ email: email.trim(), password })).unwrap();
+    } catch (err) {
+      // Error is handled by the useEffect above
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">HRM System</h1>
-          <p className="text-gray-600 mt-2">Sign in to your account</p>
+    <div className={styles.loginContainer}>
+      <div className={styles.card}>
+        <div className={styles.title}>
+          <h1 className={styles.titleText}>HRM System</h1>
+          <p className={styles.subtitle}>Sign in to your account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="email" className={styles.label}>
               Email
             </label>
             <input
@@ -91,21 +98,19 @@ function Login() {
                 setEmail(e.target.value);
                 setErrors((prev) => ({ ...prev, email: '' }));
               }}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={classNames(styles.input, errors.email && styles.inputError)}
               placeholder="Enter your email"
             />
             {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              <p className={styles.errorText}>{errors.email}</p>
             )}
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <div className={styles.inputGroup}>
+            <label htmlFor="password" className={styles.label}>
               Password
             </label>
-            <div className="relative">
+            <div className={styles.passwordWrapper}>
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
@@ -114,37 +119,35 @@ function Login() {
                   setPassword(e.target.value);
                   setErrors((prev) => ({ ...prev, password: '' }));
                 }}
-                className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.password ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={classNames(styles.input, errors.password && styles.inputError)}
                 placeholder="Enter your password"
               />
               <button
                 type="button"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm hover:text-gray-700"
+                className={styles.passwordToggle}
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
             {errors.password && (
-              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              <p className={styles.errorText}>{errors.password}</p>
             )}
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={styles.submitButton}
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+        <div className={styles.footerLink}>
+          <p>
             Don't have an account?{' '}
-            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link to="/register" className={styles.link}>
               Register here
             </Link>
           </p>

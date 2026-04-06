@@ -1,65 +1,93 @@
 import { NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { canAccess } from '../../utils/permissions';
+import styles from './Sidebar.module.css';
+import { classNames } from '../../utils/helpers';
+
+const DASHBOARD_PATH = '/dashboard';
+const USERS_PATH = '/dashboard/users';
+const PENDING_APPROVALS_PATH = '/dashboard/users/pending';
+const ROLES_PATH = '/dashboard/roles';
+const PERMISSIONS_PATH = '/dashboard/permissions';
+
+const LABEL_DASHBOARD = 'Dashboard';
+const LABEL_USERS = 'Users';
+const LABEL_PENDING_APPROVALS = 'Pending Approvals';
+const LABEL_ROLES = 'Roles';
+const LABEL_PERMISSIONS = 'Permissions';
+
+const ICON_DASHBOARD = '📊';
+const ICON_USERS = '👥';
+const ICON_PENDING_APPROVALS = '⏳';
+const ICON_ROLES = '🔐';
+const ICON_PERMISSIONS = '🔑';
+
+const MODULE_USERS = 'users';
+const MODULE_ROLES = 'roles';
+const MODULE_PERMISSIONS = 'permissions';
+
+const ACTION_VIEW = 'view';
+const ACTION_APPROVE = 'approve';
 
 function Sidebar() {
   const { user } = useSelector((state) => state.auth);
 
   const menuItems = [
     {
-      path: '/dashboard',
-      label: 'Dashboard',
-      icon: '📊',
+      path: DASHBOARD_PATH,
+      label: LABEL_DASHBOARD,
+      icon: ICON_DASHBOARD,
       show: true
     },
     {
-      path: '/dashboard/users',
-      label: 'Users',
-      icon: '👥',
-      show: canAccess('users', 'view')
+      path: USERS_PATH,
+      label: LABEL_USERS,
+      icon: ICON_USERS,
+      show: canAccess(MODULE_USERS, ACTION_VIEW)
     },
     {
-      path: '/dashboard/users/pending',
-      label: 'Pending Approvals',
-      icon: '⏳',
-      show: canAccess('users', 'approve')
+      path: PENDING_APPROVALS_PATH,
+      label: LABEL_PENDING_APPROVALS,
+      icon: ICON_PENDING_APPROVALS,
+      show: canAccess(MODULE_USERS, ACTION_APPROVE)
     },
     {
-      path: '/dashboard/roles',
-      label: 'Roles',
-      icon: '🔐',
-      show: canAccess('roles', 'view')
+      path: ROLES_PATH,
+      label: LABEL_ROLES,
+      icon: ICON_ROLES,
+      show: canAccess(MODULE_ROLES, ACTION_VIEW)
     },
     {
-      path: '/dashboard/permissions',
-      label: 'Permissions',
-      icon: '🔑',
-      show: canAccess('permissions', 'view')
+      path: PERMISSIONS_PATH,
+      label: LABEL_PERMISSIONS,
+      icon: ICON_PERMISSIONS,
+      show: canAccess(MODULE_PERMISSIONS, ACTION_VIEW)
     }
   ];
 
   const filteredItems = menuItems.filter(item => item.show);
 
   return (
-    <aside className="w-64 bg-gray-800 text-white min-h-screen">
-      <div className="p-4">
-        <h1 className="text-xl font-bold">HRM System</h1>
-        <p className="text-xs text-gray-400 mt-1">Welcome, {user?.name || 'User'}</p>
+    <aside className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>HRM System</h1>
+        <p className={styles.userText}>Welcome, {user?.name || 'User'}</p>
       </div>
       
-      <nav className="mt-4">
+      <nav className={styles.nav}>
         {filteredItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white ${
-                isActive ? 'bg-gray-700 text-white border-l-4 border-blue-500' : ''
-              }`
+              classNames(
+                styles.navLink,
+                isActive ? styles.navLinkActive : ''
+              )
             }
           >
-            <span className="mr-3">{item.icon}</span>
-            <span>{item.label}</span>
+            <span className={styles.icon}>{item.icon}</span>
+            <span className={styles.label}>{item.label}</span>
           </NavLink>
         ))}
       </nav>

@@ -1,3 +1,5 @@
+const DEFAULT_FETCH_TIMEOUT = 10000;
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 class ApiError extends Error {
@@ -9,19 +11,19 @@ class ApiError extends Error {
   }
 }
 
-async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEOUT) {
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
     });
-    clearTimeout(id);
+    clearTimeout(timeoutId);
     return response;
   } catch (error) {
-    clearTimeout(id);
+    clearTimeout(timeoutId);
     throw error;
   }
 }
@@ -37,8 +39,9 @@ async function handleResponse(response) {
   }
 
   if (!response.ok) {
+    const message = typeof data === 'string' ? data.trim() : (data?.message || 'An error occurred');
     throw new ApiError(
-      data.message || 'An error occurred',
+      message,
       response.status,
       data
     );

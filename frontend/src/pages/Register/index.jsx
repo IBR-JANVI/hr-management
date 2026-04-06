@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import { register, clearAuthError } from '../store/slices/authSlice';
+import { register, clearAuthError } from '../../store/slices/authSlice';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 6;
 
 function Register() {
   const [name, setName] = useState('');
@@ -14,7 +17,6 @@ function Register() {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
 
   useEffect(() => {
@@ -37,37 +39,31 @@ function Register() {
 
     if (!name.trim()) {
       setValidationError('Name is required');
-      toast.error('Name is required');
       return;
     }
 
     if (!email.trim()) {
       setValidationError('Email is required');
-      toast.error('Email is required');
       return;
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!EMAIL_REGEX.test(email)) {
       setValidationError('Invalid email format');
-      toast.error('Invalid email format');
       return;
     }
 
     if (!password) {
       setValidationError('Password is required');
-      toast.error('Password is required');
       return;
     }
 
-    if (password.length < 6) {
-      setValidationError('Password must be at least 6 characters');
-      toast.error('Password must be at least 6 characters');
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setValidationError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
       return;
     }
 
     if (password !== confirmPassword) {
       setValidationError('Passwords do not match');
-      toast.error('Passwords do not match');
       return;
     }
 
@@ -173,6 +169,10 @@ function Register() {
                 placeholder="Confirm your password"
               />
             </div>
+
+            {validationError && (
+              <p className="text-sm text-red-600">{validationError}</p>
+            )}
 
             <div className="flex items-center">
               <input

@@ -17,20 +17,20 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#363636',
-              color: '#fff',
+              background: 'var(--color-toast-bg)',
+              color: 'var(--color-toast-text)',
             },
             success: {
               duration: 3000,
               iconTheme: {
-                primary: 'green',
+                primary: 'var(--color-success)',
                 secondary: '#fff',
               },
             },
             error: {
               duration: 5000,
               iconTheme: {
-                primary: 'red',
+                primary: 'var(--color-error)',
                 secondary: '#fff',
               },
             },

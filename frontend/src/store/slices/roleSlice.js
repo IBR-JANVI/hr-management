@@ -6,10 +6,13 @@ const initialState = {
   permissions: [],
   modules: [],
   loading: false,
-  error: null
+  error: null,
+  loadingCreate: false,
+  loadingDelete: false,
+  errorCreate: null,
+  errorDelete: null
 };
 
-// Fetch all roles
 export const fetchRoles = createAsyncThunk(
   'roles/fetchRoles',
   async (_, { rejectWithValue }) => {
@@ -17,12 +20,11 @@ export const fetchRoles = createAsyncThunk(
       const response = await api.get('/roles');
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch roles' });
+      return rejectWithValue(error.data || { message: 'Failed to fetch roles' });
     }
   }
 );
 
-// Create role
 export const createRole = createAsyncThunk(
   'roles/createRole',
   async (roleData, { rejectWithValue }) => {
@@ -30,12 +32,11 @@ export const createRole = createAsyncThunk(
       const response = await api.post('/roles', roleData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to create role' });
+      return rejectWithValue(error.data || { message: 'Failed to create role' });
     }
   }
 );
 
-// Update role
 export const updateRole = createAsyncThunk(
   'roles/updateRole',
   async ({ id, ...roleData }, { rejectWithValue }) => {
@@ -43,12 +44,11 @@ export const updateRole = createAsyncThunk(
       const response = await api.put(`/roles/${id}`, roleData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to update role' });
+      return rejectWithValue(error.data || { message: 'Failed to update role' });
     }
   }
 );
 
-// Delete role
 export const deleteRole = createAsyncThunk(
   'roles/deleteRole',
   async (id, { rejectWithValue }) => {
@@ -56,12 +56,11 @@ export const deleteRole = createAsyncThunk(
       const response = await api.delete(`/roles/${id}`);
       return { id, ...response.data };
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to delete role' });
+      return rejectWithValue(error.data || { message: 'Failed to delete role' });
     }
   }
 );
 
-// Fetch all permissions
 export const fetchPermissions = createAsyncThunk(
   'roles/fetchPermissions',
   async (_, { rejectWithValue }) => {
@@ -69,12 +68,11 @@ export const fetchPermissions = createAsyncThunk(
       const response = await api.get('/permissions');
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch permissions' });
+      return rejectWithValue(error.data || { message: 'Failed to fetch permissions' });
     }
   }
 );
 
-// Fetch all modules
 export const fetchModules = createAsyncThunk(
   'roles/fetchModules',
   async (_, { rejectWithValue }) => {
@@ -82,12 +80,11 @@ export const fetchModules = createAsyncThunk(
       const response = await api.get('/permissions/modules');
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch modules' });
+      return rejectWithValue(error.data || { message: 'Failed to fetch modules' });
     }
   }
 );
 
-// Create permission
 export const createPermission = createAsyncThunk(
   'roles/createPermission',
   async (permissionData, { rejectWithValue }) => {
@@ -95,12 +92,11 @@ export const createPermission = createAsyncThunk(
       const response = await api.post('/permissions', permissionData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to create permission' });
+      return rejectWithValue(error.data || { message: 'Failed to create permission' });
     }
   }
 );
 
-// Delete permission
 export const deletePermission = createAsyncThunk(
   'roles/deletePermission',
   async (id, { rejectWithValue }) => {
@@ -108,7 +104,7 @@ export const deletePermission = createAsyncThunk(
       const response = await api.delete(`/permissions/${id}`);
       return { id, ...response.data };
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to delete permission' });
+      return rejectWithValue(error.data || { message: 'Failed to delete permission' });
     }
   }
 );
@@ -119,11 +115,12 @@ const roleSlice = createSlice({
   reducers: {
     clearRoleError: (state) => {
       state.error = null;
+      state.errorCreate = null;
+      state.errorDelete = null;
     }
   },
   extraReducers: (builder) => {
     builder
-      // Fetch roles
       .addCase(fetchRoles.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -136,34 +133,45 @@ const roleSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Create role
+      .addCase(createRole.pending, (state) => {
+        state.loadingCreate = true;
+        state.errorCreate = null;
+      })
       .addCase(createRole.fulfilled, (state, action) => {
+        state.loadingCreate = false;
         state.roles.push(action.payload.role);
       })
-      // Update role
+      .addCase(createRole.rejected, (state, action) => {
+        state.loadingCreate = false;
+        state.errorCreate = action.payload;
+      })
       .addCase(updateRole.fulfilled, (state, action) => {
         const index = state.roles.findIndex(r => r.id === action.payload.role.id);
         if (index !== -1) {
           state.roles[index] = action.payload.role;
         }
       })
-      // Delete role
+      .addCase(deleteRole.pending, (state) => {
+        state.loadingDelete = true;
+        state.errorDelete = null;
+      })
       .addCase(deleteRole.fulfilled, (state, action) => {
+        state.loadingDelete = false;
         state.roles = state.roles.filter(r => r.id !== action.payload.id);
       })
-      // Fetch permissions
+      .addCase(deleteRole.rejected, (state, action) => {
+        state.loadingDelete = false;
+        state.errorDelete = action.payload;
+      })
       .addCase(fetchPermissions.fulfilled, (state, action) => {
         state.permissions = action.payload.permissions;
       })
-      // Fetch modules
       .addCase(fetchModules.fulfilled, (state, action) => {
         state.modules = action.payload.modules;
       })
-      // Create permission
       .addCase(createPermission.fulfilled, (state, action) => {
         state.permissions.push(action.payload.permission);
       })
-      // Delete permission
       .addCase(deletePermission.fulfilled, (state, action) => {
         state.permissions = state.permissions.filter(p => p.id !== action.payload.id);
       });
