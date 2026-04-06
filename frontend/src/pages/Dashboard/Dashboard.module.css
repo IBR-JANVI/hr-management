@@ -9,6 +9,19 @@
   margin-bottom: var(--spacing-6);
 }
 
+.welcomeText {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.userName {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -18,9 +31,17 @@
 
 .statCard {
   background-color: var(--color-bg-primary);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   box-shadow: var(--shadow-md);
-  padding: var(--spacing-6);
+  padding: 24px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-border);
 }
 
 .statCardHeader {
@@ -30,20 +51,35 @@
 }
 
 .statIcon {
-  border-radius: var(--radius-full);
-  padding: var(--spacing-3);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .statIconText {
-  color: var(--color-on-error);
-  font-size: var(--font-size-xl);
+  color: white;
+  font-size: 20px;
+}
+
+.statLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.valueLarge {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
 .panel {
   background-color: var(--color-bg-primary);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   box-shadow: var(--shadow-md);
-  padding: var(--spacing-6);
+  padding: 24px;
   margin-bottom: var(--spacing-6);
 }
 
@@ -51,53 +87,104 @@
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-4);
-}
-
-.profileRow {
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
+  gap: var(--spacing-2);
+}
+
+.panelHeaderIcon {
+  color: var(--color-primary);
+}
+
+.profileCard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.profileItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profileLabel {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profileValue {
+  font-size: 15px;
+  color: var(--color-text-primary);
+  font-weight: 500;
 }
 
 .badge {
-  padding: var(--spacing-1) var(--spacing-2);
-  background-color: var(--color-success);
-  color: var(--color-on-error);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-sm);
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background-color: rgba(34, 197, 94, 0.1);
+  color: var(--color-success);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badgePending {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--color-warning);
+}
+
+.badgeRejected {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+}
+
+.permissionsWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .permissionsTag {
-  padding: var(--spacing-1) var(--spacing-3);
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
   background-color: var(--color-bg-secondary);
   color: var(--color-text-primary);
-  border-radius: var(--radius-full);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+}
+
+.noPermissions {
+  color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }
 
 .loadingContainer {
   display: flex;
   justify-content: center;
+  align-items: center;
   padding: var(--spacing-8);
+  color: var(--color-text-muted);
 }
 
 .errorContainer {
   padding: var(--spacing-8);
   color: var(--color-error);
+  text-align: center;
 }
 
 .emptyContainer {
   padding: var(--spacing-8);
   color: var(--color-text-muted);
-}
-
-.label {
-  color: var(--color-text-muted);
-  width: var(--label-width, var(--spacing-6));
-}
-
-.value {
-  color: var(--color-text-primary);
+  text-align: center;
 }
 
 .subLabel {
@@ -111,24 +198,25 @@
   color: var(--color-text-muted);
 }
 
-.valueLarge {
-  font-size: var(--font-size-2xl);
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin-top: var(--spacing-1);
+.statLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
 .noPermissions {
   color: var(--color-text-muted);
 }
 
-.statLabel {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
-.permissionsWrapper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-2);
+@media (max-width: 640px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .profileCard {
+    grid-template-columns: 1fr;
+  }
+  
+  .panel {
+    padding: 20px;
+  }
 }
