@@ -16,9 +16,6 @@ const MODULE_PERMISSIONS = 'permissions';
 
 const ACTION_VIEW = 'view';
 const ACTION_APPROVE = 'approve';
-const ACTION_REJECT = 'reject';
-const ACTION_CREATE = 'create';
-const ACTION_DELETE = 'delete';
 
 const LABEL_DASHBOARD = 'Dashboard';
 const LABEL_USERS = 'Users';
