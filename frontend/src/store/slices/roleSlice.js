@@ -5,7 +5,9 @@ const initialState = {
   roles: [],
   permissions: [],
   modules: [],
-  loading: false,
+  loadingRoles: false,
+  loadingPermissions: false,
+  loadingModules: false,
   error: null,
   loadingCreate: false,
   loadingDelete: false,
@@ -125,15 +127,15 @@ const roleSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchRoles.pending, (state) => {
-        state.loading = true;
+        state.loadingRoles = true;
         state.error = null;
       })
       .addCase(fetchRoles.fulfilled, (state, action) => {
-        state.loading = false;
+        state.loadingRoles = false;
         state.roles = action.payload?.roles || action.payload?.data?.roles || [];
       })
       .addCase(fetchRoles.rejected, (state, action) => {
-        state.loading = false;
+        state.loadingRoles = false;
         state.error = action.payload;
       })
       .addCase(createRole.pending, (state) => {
@@ -157,7 +159,7 @@ const roleSlice = createSlice({
         state.loadingUpdate = false;
         const role = action.payload?.role || action.payload?.data?.role;
         if (role) {
-          const index = state.roles.findIndex(r => r.id === role.id);
+          const index = state.roles.findIndex(existingRole => existingRole.id === role.id);
           if (index !== -1) {
             state.roles[index] = role;
           }
@@ -180,27 +182,27 @@ const roleSlice = createSlice({
         state.errorDelete = action.payload;
       })
       .addCase(fetchPermissions.pending, (state) => {
-        state.loading = true;
+        state.loadingPermissions = true;
         state.error = null;
       })
       .addCase(fetchPermissions.fulfilled, (state, action) => {
-        state.loading = false;
+        state.loadingPermissions = false;
         state.permissions = action.payload?.permissions || action.payload?.data?.permissions || [];
       })
       .addCase(fetchPermissions.rejected, (state, action) => {
-        state.loading = false;
+        state.loadingPermissions = false;
         state.error = action.payload;
       })
       .addCase(fetchModules.pending, (state) => {
-        state.loading = true;
+        state.loadingModules = true;
         state.error = null;
       })
       .addCase(fetchModules.fulfilled, (state, action) => {
-        state.loading = false;
+        state.loadingModules = false;
         state.modules = action.payload?.modules || action.payload?.data?.modules || [];
       })
       .addCase(fetchModules.rejected, (state, action) => {
-        state.loading = false;
+        state.loadingModules = false;
         state.error = action.payload;
       })
       .addCase(createPermission.pending, (state) => {
@@ -209,7 +211,10 @@ const roleSlice = createSlice({
       })
       .addCase(createPermission.fulfilled, (state, action) => {
         state.loadingCreate = false;
-        state.permissions.push(action.payload?.permission || action.payload?.data?.permission);
+        const created = action.payload?.permission || action.payload?.data?.permission;
+        if (created) {
+          state.permissions.push(created);
+        }
       })
       .addCase(createPermission.rejected, (state, action) => {
         state.loadingCreate = false;

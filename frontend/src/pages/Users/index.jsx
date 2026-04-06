@@ -26,6 +26,10 @@ function Users() {
     dispatch(fetchUsers({ page, search: debouncedSearch, status }));
   }, [dispatch, page, debouncedSearch, status]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, status]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     setPage(1);
@@ -112,14 +116,13 @@ function Users() {
             </tr>
           </thead>
           <tbody style={{ backgroundColor: 'var(--color-bg-primary)', borderTop: '1px solid var(--color-border)' }}>
-            {error && (
+            {error ? (
               <tr>
                 <td colSpan={canDelete ? 6 : 5} style={{ padding: 'var(--spacing-4)', textAlign: 'center', color: 'var(--color-error)' }}>
                   {error.message || 'Failed to load users'}
                 </td>
               </tr>
-            )}
-            {loading ? (
+            ) : loading ? (
               <tr aria-busy="true">
                 <td colSpan={canDelete ? 6 : 5} style={{ padding: 'var(--spacing-4)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                   Loading...

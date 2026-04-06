@@ -6,7 +6,7 @@ import { canAccess } from '../../utils/permissions';
 
 function Permissions() {
   const dispatch = useDispatch();
-  const { permissions, modules, loading } = useSelector((state) => state.roles);
+  const { permissions, modules, loadingPermissions: loading } = useSelector((state) => state.roles);
   const [showModal, setShowModal] = useState(false);
   const [newPermission, setNewPermission] = useState({ module: '', action: '' });
   const modalRef = useRef(null);
@@ -14,6 +14,7 @@ function Permissions() {
 
   const canCreate = canAccess('permissions', 'create');
   const canDelete = canAccess('permissions', 'delete');
+  const canView = canAccess('permissions', 'view');
 
   const groupedPermissions = useMemo(() => {
     const grouped = {};
@@ -27,9 +28,16 @@ function Permissions() {
   }, [permissions]);
 
   useEffect(() => {
-    dispatch(fetchPermissions());
-    dispatch(fetchModules());
-  }, [dispatch]);
+    if (canView) {
+      dispatch(fetchPermissions());
+    }
+  }, [dispatch, canView]);
+
+  useEffect(() => {
+    if (canCreate) {
+      dispatch(fetchModules());
+    }
+  }, [dispatch, canCreate]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {

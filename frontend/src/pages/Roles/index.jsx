@@ -6,18 +6,26 @@ import { canAccess } from '../../utils/permissions';
 
 function Roles() {
   const dispatch = useDispatch();
-  const { roles, permissions, loading } = useSelector((state) => state.roles);
+  const { roles, permissions, loadingRoles: loading } = useSelector((state) => state.roles);
   const [showModal, setShowModal] = useState(false);
   const [newRole, setNewRole] = useState({ name: '', description: '', isDefault: false, permissionIds: [] });
   const firstFocusableRef = useRef(null);
 
   const canCreate = canAccess('roles', 'create');
   const canDelete = canAccess('roles', 'delete');
+  const canView = canAccess('roles', 'view');
 
   useEffect(() => {
-    dispatch(fetchRoles());
-    dispatch(fetchPermissions());
-  }, [dispatch]);
+    if (canView) {
+      dispatch(fetchRoles());
+    }
+  }, [dispatch, canView]);
+
+  useEffect(() => {
+    if (canCreate) {
+      dispatch(fetchPermissions());
+    }
+  }, [dispatch, canCreate]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
