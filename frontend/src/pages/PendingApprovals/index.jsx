@@ -3,7 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchPendingUsers, approveUser, rejectUser } from '../../store/slices/userSlice';
 import { fetchRoles as fetchAllRoles } from '../../store/slices/roleSlice';
-import { canAccess } from '../../utils/permissions';
+import { usePermissions } from '../../hooks/usePermissions';
+import styles from './PendingApprovals.module.css';
 
 function PendingApprovals() {
   const dispatch = useDispatch();
@@ -14,6 +15,7 @@ function PendingApprovals() {
   const modalRef = useRef(null);
   const firstFocusableRef = useRef(null);
 
+  const { canAccess } = usePermissions();
   const canApprove = canAccess('users', 'approve');
   const canReject = canAccess('users', 'reject');
 
@@ -97,9 +99,9 @@ function PendingApprovals() {
 
   if (!canApprove && !canReject) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
-        <div style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>
-          <p style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--spacing-2)' }}>🔒</p>
+      <div className={styles.lockedContainer}>
+        <div className={styles.lockedText}>
+          <p className={styles.lockedIcon}>🔒</p>
           <p>You don't have permission to view this page.</p>
         </div>
       </div>
@@ -108,55 +110,57 @@ function PendingApprovals() {
 
   if (loading) {
     return (
-      <div aria-busy="true" aria-live="polite" style={{ padding: 'var(--spacing-8)', textAlign: 'center' }}>
+      <div aria-busy="true" aria-live="polite" className={styles.loadingWrapper}>
         Loading...
       </div>
     );
   }
 
   return (
-    <div>
-      <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-6)' }}>
+    <div className={styles.root}>
+      <h1 className={styles.title}>
         Pending Approvals
       </h1>
 
       {pendingUsers.length === 0 ? (
-        <div style={{ backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', padding: 'var(--spacing-6)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+        <div className={styles.emptyState}>
           No pending users to approve
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--spacing-6)' }}>
+        <div className={styles.grid}>
           {pendingUsers.map((user) => (
-            <div key={user.id} style={{ backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', padding: 'var(--spacing-6)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--spacing-4)' }}>
+            <div key={user.id} className={styles.card}>
+              <div className={styles.cardHeader}>
                 <div>
-                  <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: '600', color: 'var(--color-text-primary)' }}>
+                  <h3 className={styles.userName}>
                     {user.name}
                   </h3>
-                  <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>{user.email}</p>
+                  <p className={styles.userEmail}>{user.email}</p>
                 </div>
-                <span style={{ padding: 'var(--spacing-1) var(--spacing-2)', fontSize: 'var(--font-size-sm)', backgroundColor: 'var(--color-warning)', color: 'white', borderRadius: 'var(--radius-full)' }}>
+                <span className={styles.statusBadge}>
                   Pending
                 </span>
               </div>
 
-              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--spacing-4)' }}>
+              <p className={styles.registeredText}>
                 Registered: {new Date(user.createdAt).toLocaleDateString()}
               </p>
 
-              <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
+              <div className={styles.buttonGroup}>
                 {canApprove && (
                   <button
+                    type="button"
                     onClick={() => setSelectedUser(user)}
-                    style={{ flex: 1, padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-success)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
+                    className={styles.approveButton}
                   >
                     Approve
                   </button>
                 )}
                 {canReject && (
                   <button
+                    type="button"
                     onClick={() => handleReject(user.id)}
-                    style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-error)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
+                    className={styles.rejectButton}
                   >
                     Reject
                   </button>
@@ -169,22 +173,22 @@ function PendingApprovals() {
 
       {selectedUser && (
         <div 
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-overlay-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 'var(--z-modal)' }}
+          className={styles.modalOverlay}
           ref={modalRef}
           role="dialog"
           aria-modal="true"
         >
-          <div style={{ backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', padding: 'var(--spacing-6)', maxWidth: '28rem', width: '100%', margin: 'var(--spacing-4)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-4)' }}>
+          <div className={styles.modalContent}>
+            <h2 className={styles.modalTitle}>
               Approve User
             </h2>
-            <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-4)' }}>
+            <p className={styles.modalDescription}>
               Select roles for {selectedUser.name}
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', marginBottom: 'var(--spacing-6)', maxHeight: '300px', overflowY: 'auto' }}>
+            <div className={styles.roleList}>
               {roles.map((role) => (
-                <label key={role.id} style={{ display: 'flex', alignItems: 'center' }}>
+                <label key={role.id} className={styles.roleLabel}>
                   <input
                     type="checkbox"
                     checked={selectedRoles.includes(role.id)}
@@ -195,31 +199,34 @@ function PendingApprovals() {
                         setSelectedRoles(selectedRoles.filter(id => id !== role.id));
                       }
                     }}
-                    style={{ marginRight: 'var(--spacing-2)' }}
+                    className={styles.roleCheckbox}
                   />
-                  <span style={{ color: 'var(--color-text-primary)' }}>{role.name}</span>
+                  <span className={styles.roleName}>{role.name}</span>
                   {role.isDefault && (
-                    <span style={{ marginLeft: 'var(--spacing-2)', fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>(Default)</span>
+                    <span className={styles.roleDefault}>(Default)</span>
                   )}
                 </label>
               ))}
             </div>
 
-            <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
+            <div className={styles.buttonGroup}>
               <button
+                type="button"
                 ref={firstFocusableRef}
                 onClick={handleApprove}
                 disabled={selectedRoles.length === 0}
-                style={{ flex: 1, padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-success)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: selectedRoles.length === 0 ? 'not-allowed' : 'pointer', opacity: selectedRoles.length === 0 ? 0.5 : 1 }}
+                className={styles.approveButton}
+                style={{ opacity: selectedRoles.length === 0 ? 0.5 : 1, cursor: selectedRoles.length === 0 ? 'not-allowed' : 'pointer' }}
               >
                 Approve
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setSelectedUser(null);
                   setSelectedRoles([]);
                 }}
-                style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
+                className={styles.cancelButton}
               >
                 Cancel
               </button>

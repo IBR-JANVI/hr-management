@@ -33,11 +33,10 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await api.post('/auth/login', credentials);
-      const { user, accessToken, refreshToken } = response.data;
+      const response = await api.post('/auth/sessions', credentials, { credentials: 'include' });
+      const { user, accessToken } = response.data;
       
       localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
       localStorage.setItem('user', JSON.stringify(user));
       
       return { user, token: accessToken };
@@ -51,7 +50,7 @@ export const register = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/auth/register', userData);
+      const response = await api.post('/auth/users', userData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.data || { message: 'Registration failed' });
@@ -64,10 +63,10 @@ export const logout = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
-      await api.post('/auth/logout', { refreshToken });
+      await api.delete('/auth/sessions', { refreshToken });
       return { success: true };
     } catch (error) {
-      return { success: true };
+      return rejectWithValue(error.response?.data || error.message);
     } finally {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
@@ -80,7 +79,7 @@ export const fetchProfile = createAsyncThunk(
   'auth/fetchProfile',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/auth/profile');
+      const response = await api.get('/auth/profiles/me');
       const user = response.data.user;
       localStorage.setItem('user', JSON.stringify(user));
       return user;
@@ -99,7 +98,7 @@ export const refreshToken = createAsyncThunk(
         return rejectWithValue({ message: 'No refresh token' });
       }
       
-      const response = await api.post('/auth/refresh', { refreshToken: refreshTokenValue });
+      const response = await api.post('/auth/tokens', { refreshToken: refreshTokenValue });
       const { accessToken } = response.data;
       
       localStorage.setItem('accessToken', accessToken);
@@ -134,8 +133,10 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        const user = action.payload?.user || action.payload?.data?.user;
+        const token = action.payload?.token || action.payload?.data?.accessToken;
+        state.user = user;
+        state.token = token;
         state.isAuthenticated = true;
       })
       .addCase(login.rejected, (state, action) => {
@@ -158,12 +159,19 @@ const authSlice = createSlice({
         state.token = null;
         state.isAuthenticated = false;
       })
+      .addCase(logout.rejected, (state) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+      })
       .addCase(fetchProfile.fulfilled, (state, action) => {
-        state.user = action.payload;
+        const user = action.payload?.user || action.payload?.data?.user || action.payload;
+        state.user = user;
       })
       .addCase(refreshToken.fulfilled, (state, action) => {
-        state.token = action.payload;
-        state.isAuthenticated = Boolean(action.payload);
+        const token = action.payload?.accessToken || action.payload?.data?.accessToken || action.payload;
+        state.token = token;
+        state.isAuthenticated = Boolean(token);
       })
       .addCase(refreshToken.rejected, (state) => {
         state.user = null;

@@ -24,6 +24,9 @@ async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_FETCH_TIMEO
     return response;
   } catch (error) {
     clearTimeout(timeoutId);
+    if (error.name === 'AbortError' || (error instanceof DOMException && error.name === 'AbortError')) {
+      throw new Error('Request timed out');
+    }
     throw error;
   }
 }
@@ -50,7 +53,34 @@ async function handleResponse(response) {
   return data;
 }
 
-export async function apiClient(endpoint, options = {}) {
+class TimeoutError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'TimeoutError';
+  }
+}
+
+async function refreshAccessToken() {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) {
+    throw new Error('No refresh token');
+  }
+  
+  const response = await fetch(`${API_URL}/api/v1/auth/tokens`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Token refresh failed');
+  }
+  
+  const data = await response.json();
+  return data.data?.accessToken;
+}
+
+export async function apiClient(endpoint, options = {}, retry = true) {
   const token = localStorage.getItem('accessToken');
 
   const headers = {
@@ -67,8 +97,33 @@ export async function apiClient(endpoint, options = {}) {
     headers,
   };
 
-  const response = await fetchWithTimeout(`${API_URL}/api/v1${endpoint}`, config);
-  return handleResponse(response);
+  try {
+    const response = await fetchWithTimeout(`${API_URL}/api/v1${endpoint}`, config);
+    
+    if (response.status === 401 && retry) {
+      try {
+        const newAccessToken = await refreshAccessToken();
+        if (newAccessToken) {
+          localStorage.setItem('accessToken', newAccessToken);
+          headers.Authorization = `Bearer ${newAccessToken}`;
+          const retryConfig = { ...config, headers };
+          const retryResponse = await fetchWithTimeout(`${API_URL}/api/v1${endpoint}`, retryConfig);
+          return handleResponse(retryResponse);
+        }
+      } catch (refreshError) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+      }
+    }
+    
+    return handleResponse(response);
+  } catch (error) {
+    if (error.message === 'Request timed out') {
+      throw new TimeoutError('Request timed out');
+    }
+    throw error;
+  }
 }
 
 export const api = {

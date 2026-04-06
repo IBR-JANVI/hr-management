@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchRoles, fetchPermissions, createRole, deleteRole } from '../../store/slices/roleSlice';
@@ -9,6 +9,7 @@ function Roles() {
   const { roles, permissions, loading } = useSelector((state) => state.roles);
   const [showModal, setShowModal] = useState(false);
   const [newRole, setNewRole] = useState({ name: '', description: '', isDefault: false, permissionIds: [] });
+  const firstFocusableRef = useRef(null);
 
   const canCreate = canAccess('roles', 'create');
   const canDelete = canAccess('roles', 'delete');
@@ -17,6 +18,24 @@ function Roles() {
     dispatch(fetchRoles());
     dispatch(fetchPermissions());
   }, [dispatch]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && showModal) {
+        setShowModal(false);
+        setNewRole({ name: '', description: '', isDefault: false, permissionIds: [] });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showModal]);
+
+  useEffect(() => {
+    if (showModal && firstFocusableRef.current) {
+      firstFocusableRef.current.focus();
+    }
+  }, [showModal]);
 
   const handleCreateRole = async () => {
     if (newRole.name && newRole.permissionIds.length > 0) {
@@ -59,6 +78,7 @@ function Roles() {
         <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: '700', color: 'var(--color-text-primary)' }}>Role Management</h1>
         {canCreate && (
           <button
+            type="button"
             onClick={() => setShowModal(true)}
             style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
           >
@@ -114,6 +134,7 @@ function Roles() {
 
               {canDelete && !role.isSuperAdmin && (
                 <button
+                  type="button"
                   onClick={() => handleDeleteRole(role.id)}
                   style={{ width: '100%', padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-error)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
                 >
@@ -143,6 +164,7 @@ function Roles() {
                   Role Name
                 </label>
                 <input
+                  ref={firstFocusableRef}
                   id="roleNameId"
                   type="text"
                   value={newRole.name}

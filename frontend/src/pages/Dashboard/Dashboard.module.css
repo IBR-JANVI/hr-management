@@ -34,6 +34,11 @@
   padding: var(--spacing-3);
 }
 
+.statIconText {
+  color: var(--color-on-error);
+  font-size: var(--font-size-xl);
+}
+
 .panel {
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-lg);
@@ -73,22 +78,22 @@
 .loadingContainer {
   display: flex;
   justify-content: center;
-  padding: 2rem;
+  padding: var(--spacing-8);
 }
 
 .errorContainer {
-  padding: 2rem;
+  padding: var(--spacing-8);
   color: var(--color-error);
 }
 
 .emptyContainer {
-  padding: 2rem;
+  padding: var(--spacing-8);
   color: var(--color-text-muted);
 }
 
 .label {
   color: var(--color-text-muted);
-  width: 6rem;
+  width: var(--label-width, var(--spacing-6));
 }
 
 .value {
