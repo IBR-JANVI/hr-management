@@ -1,3 +1,4 @@
+// Note: This function reads from localStorage, which is a side effect. Use usePermissions hook in components for reactive state.
 export const canAccess = (module, action) => {
   try {
     const storedUser = localStorage.getItem('user');
