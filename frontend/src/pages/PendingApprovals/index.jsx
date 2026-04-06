@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { fetchPendingUsers, approveUser, rejectUser } from '../../store/slices/userSlice';
 import { fetchRoles as fetchAllRoles } from '../../store/slices/roleSlice';
 import { usePermissions } from '../../hooks/usePermissions';
+import Modal from '../../components/Modal';
 import styles from './PendingApprovals.module.css';
 
 function PendingApprovals() {
@@ -12,6 +13,8 @@ function PendingApprovals() {
   const { roles } = useSelector((state) => state.roles);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRoles, setSelectedRoles] = useState([]);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectUserId, setRejectUserId] = useState(null);
   const modalRef = useRef(null);
   const firstFocusableRef = useRef(null);
 
@@ -92,16 +95,26 @@ function PendingApprovals() {
     }
   };
 
-  const handleReject = async (id) => {
-    const user = pendingUsers.find(u => u.id === id);
-    if (window.confirm('Are you sure you want to reject this user?')) {
-      try {
-        await dispatch(rejectUser(id)).unwrap();
-        toast.success(`User ${user?.name || 'User'} has been rejected`);
-      } catch (error) {
-        toast.error(error?.error?.message || 'Failed to reject user');
-      }
+  const handleRejectClick = (id) => {
+    setRejectUserId(id);
+    setShowRejectModal(true);
+  };
+
+  const handleConfirmReject = async () => {
+    const user = pendingUsers.find(u => u.id === rejectUserId);
+    try {
+      await dispatch(rejectUser(rejectUserId)).unwrap();
+      toast.success(`User ${user?.name || 'User'} has been rejected`);
+      setShowRejectModal(false);
+      setRejectUserId(null);
+    } catch (error) {
+      toast.error(error?.error?.message || 'Failed to reject user');
     }
+  };
+
+  const handleCancelReject = () => {
+    setShowRejectModal(false);
+    setRejectUserId(null);
   };
 
   if (!canApprove && !canReject) {
@@ -166,7 +179,7 @@ function PendingApprovals() {
                 {canReject && (
                   <button
                     type="button"
-                    onClick={() => handleReject(user.id)}
+                    onClick={() => handleRejectClick(user.id)}
                     className={styles.rejectButton}
                   >
                     Reject
@@ -241,6 +254,17 @@ function PendingApprovals() {
           </div>
         </div>
       )}
+
+      <Modal
+        isOpen={showRejectModal}
+        onClose={handleCancelReject}
+        onConfirm={handleConfirmReject}
+        title="Reject User"
+        message="Are you sure you want to reject this user?"
+        confirmText="Reject"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

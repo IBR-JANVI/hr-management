@@ -8,6 +8,9 @@ const initialState = {
   stats: null,
   statsLoading: false,
   statsError: null,
+  attendance: null,
+  attendanceLoading: false,
+  attendanceError: null,
   pagination: {
     page: 1,
     limit: 10,
@@ -94,6 +97,45 @@ export const deleteUser = createAsyncThunk(
       return { id, ...response.data };
     } catch (error) {
       return rejectWithValue(error.data || { message: 'Failed to delete user' });
+    }
+  }
+);
+
+// Create user
+export const createUser = createAsyncThunk(
+  'users/createUser',
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/users', userData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.data || { message: 'Failed to create user' });
+    }
+  }
+);
+
+// Update user
+export const updateUser = createAsyncThunk(
+  'users/updateUser',
+  async ({ id, ...userData }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(`/users/${id}`, userData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.data || { message: 'Failed to update user' });
+    }
+  }
+);
+
+// Fetch user attendance
+export const fetchUserAttendance = createAsyncThunk(
+  'users/fetchUserAttendance',
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/attendance/my-attendance', { params });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.data || { message: 'Failed to fetch attendance' });
     }
   }
 );
@@ -197,6 +239,56 @@ const userSlice = createSlice({
       .addCase(deleteUser.rejected, (state, action) => {
         state.actionLoading.deleteUser = false;
         state.actionError = action.payload || action.error;
+      })
+      // Create user
+      .addCase(createUser.pending, (state) => {
+        state.actionLoading.createUser = true;
+        state.actionError = null;
+      })
+      .addCase(createUser.fulfilled, (state, action) => {
+        state.actionLoading.createUser = false;
+        const newUser = action.payload?.user || action.payload?.data?.user;
+        if (newUser) {
+          state.users.unshift(newUser);
+          state.pagination.total += 1;
+          state.pagination.totalPages = Math.ceil(state.pagination.total / Math.max(1, state.pagination.limit));
+        }
+      })
+      .addCase(createUser.rejected, (state, action) => {
+        state.actionLoading.createUser = false;
+        state.actionError = action.payload || action.error;
+      })
+      // Update user
+      .addCase(updateUser.pending, (state) => {
+        state.actionLoading.updateUser = true;
+        state.actionError = null;
+      })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.actionLoading.updateUser = false;
+        const updatedUser = action.payload?.user || action.payload?.data?.user;
+        if (updatedUser) {
+          const index = state.users.findIndex(u => u.id === updatedUser.id);
+          if (index !== -1) {
+            state.users[index] = updatedUser;
+          }
+        }
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.actionLoading.updateUser = false;
+        state.actionError = action.payload || action.error;
+      })
+      // Fetch user attendance
+      .addCase(fetchUserAttendance.pending, (state) => {
+        state.attendanceLoading = true;
+        state.attendanceError = null;
+      })
+      .addCase(fetchUserAttendance.fulfilled, (state, action) => {
+        state.attendanceLoading = false;
+        state.attendance = action.payload || action.payload?.data || null;
+      })
+      .addCase(fetchUserAttendance.rejected, (state, action) => {
+        state.attendanceLoading = false;
+        state.attendanceError = action.payload || { message: 'Failed to load attendance' };
       });
   }
 });

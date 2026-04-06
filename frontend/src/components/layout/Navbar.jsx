@@ -1,15 +1,23 @@
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { logout } from '../../store/slices/authSlice';
+import Modal from '../Modal';
 import styles from './Navbar.module.css';
 
 function Navbar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setShowLogoutModal(false);
     try {
       await dispatch(logout());
       toast.success('Logged out successfully');
@@ -40,7 +48,7 @@ function Navbar() {
             </div>
             
             <button
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               className={styles.logoutButton}
             >
               Logout
@@ -48,6 +56,17 @@ function Navbar() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleConfirmLogout}
+        title="Logout Confirmation"
+        message="Do you want to logout?"
+        confirmText="Yes"
+        cancelText="No"
+        variant="primary"
+      />
     </nav>
   );
 }
