@@ -68,9 +68,13 @@ function Register() {
       return;
     }
 
-    await dispatch(register({ name: name.trim(), email: email.trim(), password })).unwrap();
-    setRegistrationSuccess(true);
-    toast.success('Registration successful. Please wait for admin approval.');
+    try {
+      await dispatch(register({ name: name.trim(), email: email.trim(), password })).unwrap();
+      setRegistrationSuccess(true);
+      toast.success('Registration successful. Please wait for admin approval.');
+    } catch (err) {
+      setValidationError(err?.message || 'Registration failed. Please try again.');
+    }
   };
 
   return (

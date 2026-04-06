@@ -20,9 +20,16 @@ function PendingApprovals() {
   const canReject = canAccess('users', 'reject');
 
   useEffect(() => {
-    dispatch(fetchPendingUsers());
-    dispatch(fetchAllRoles());
-  }, [dispatch]);
+    if (canApprove || canReject) {
+      dispatch(fetchPendingUsers());
+    }
+  }, [dispatch, canApprove, canReject]);
+
+  useEffect(() => {
+    if (canApprove) {
+      dispatch(fetchAllRoles());
+    }
+  }, [dispatch, canApprove]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {

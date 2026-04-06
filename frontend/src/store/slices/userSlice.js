@@ -192,6 +192,7 @@ const userSlice = createSlice({
         state.users = state.users.filter(user => user.id !== action.payload.id);
         state.pagination.total = Math.max(0, state.pagination.total - 1);
         state.pagination.totalPages = Math.ceil(state.pagination.total / Math.max(1, state.pagination.limit));
+        state.pagination.page = Math.min(state.pagination.page, Math.max(1, state.pagination.totalPages));
       })
       .addCase(deleteUser.rejected, (state, action) => {
         state.actionLoading.deleteUser = false;
