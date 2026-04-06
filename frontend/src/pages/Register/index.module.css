@@ -1,4 +1,4 @@
-.loginContainer {
+.container {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -7,7 +7,7 @@
 }
 
 .card {
-  max-width: 28rem;
+  max-width: var(--max-width-md);
   width: 100%;
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-lg);
@@ -15,12 +15,12 @@
   padding: var(--spacing-8);
 }
 
-.title {
+.header {
   text-align: center;
   margin-bottom: var(--spacing-8);
 }
 
-.titleText {
+.title {
   font-size: var(--font-size-2xl);
   font-weight: 700;
   color: var(--color-text-primary);
@@ -34,13 +34,7 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-6);
-}
-
-.inputGroup {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-1);
+  gap: var(--spacing-5);
 }
 
 .label {
@@ -66,73 +60,86 @@
   box-shadow: var(--focus-ring);
 }
 
-.inputError {
-  border-color: var(--color-error);
+.checkboxLabel {
+  display: flex;
+  align-items: center;
 }
 
-.passwordWrapper {
-  position: relative;
+.checkbox {
+  height: 1rem;
+  width: 1rem;
+  text-blue-600;
+  focus-ring-blue-500;
+  border-gray-300;
+  border-radius: rounded;
 }
 
-.passwordToggle {
-  position: absolute;
-  right: var(--spacing-2);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--color-text-secondary);
+.checkboxText {
+  margin-left: var(--spacing-2);
+  display: block;
   font-size: var(--font-size-sm);
-  background: none;
-  border: none;
-  cursor: pointer;
+  color: var(--color-text-secondary);
 }
 
-.passwordToggle:hover {
-  color: var(--color-text-primary);
-}
-
-.errorText {
+.error {
   font-size: var(--font-size-sm);
   color: var(--color-error);
-  margin-top: var(--spacing-1);
 }
 
 .submitButton {
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: var(--spacing-2) var(--spacing-4);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--color-on-primary);
-  background-color: var(--color-primary);
-  cursor: pointer;
-  transition: all 0.2s ease;
+  py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
-.submitButton:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
-}
-
-.submitButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.footerLink {
+.successContainer {
   text-align: center;
+}
+
+.successBox {
+  margin-bottom: var(--spacing-6);
+  padding: var(--spacing-6);
+  background-color: var(--color-success);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-lg);
+}
+
+.successIcon {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--spacing-3);
+}
+
+.successTitle {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-on-error);
+  margin-bottom: var(--spacing-2);
+}
+
+.successText {
+  color: var(--color-on-error);
+}
+
+.loginLink {
+  display: inline-block;
+  width: 100%;
+  py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
+}
+
+.footer {
   margin-top: var(--spacing-6);
+  text-align: center;
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 
-.link {
+.footerLink {
   font-weight: 500;
   color: var(--color-primary);
   text-decoration: none;
 }
 
-.link:hover {
+.footerLink:hover {
   text-decoration: underline;
 }

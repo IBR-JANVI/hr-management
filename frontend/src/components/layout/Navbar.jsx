@@ -17,7 +17,6 @@ function Navbar() {
       navigate('/login');
     } catch (error) {
       toast.error('Failed to logout. Please try again.');
-      console.error('Logout error:', error);
     }
   };
 

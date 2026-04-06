@@ -24,14 +24,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               duration: 3000,
               iconTheme: {
                 primary: 'var(--color-success)',
-                secondary: '#fff',
+                secondary: 'var(--color-toast-text)',
               },
             },
             error: {
               duration: 5000,
               iconTheme: {
                 primary: 'var(--color-error)',
-                secondary: '#fff',
+                secondary: 'var(--color-toast-text)',
               },
             },
           }}

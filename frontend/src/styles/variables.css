@@ -8,6 +8,8 @@
   --color-warning: #f59e0b;
   --color-error: #ef4444;
   --color-error-hover: #dc2626;
+  --color-error-bg-light: rgba(239, 68, 68, 0.1);
+  --color-purple-500: #9333ea;
 
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #f9fafb;
@@ -15,6 +17,12 @@
   --color-text-secondary: #6b7280;
   --color-text-muted: #9ca3af;
   --color-border: #e5e7eb;
+  --color-text-inverse: #ffffff;
+  --color-on-primary: #ffffff;
+  --color-on-error: #ffffff;
+  --color-overlay-bg: rgba(0, 0, 0, 0.5);
+  --color-bg: #ffffff;
+  --color-sidebar-bg: #1f2937;
 
   --focus-ring: 0 0 0 2px rgba(59, 130, 246, 0.5);
   
@@ -48,8 +56,8 @@
   --z-modal: 1040;
   --z-toast: 1050;
 
+  --navbar-height: 4rem;
+
   --color-toast-bg: #363636;
   --color-toast-text: #ffffff;
-  --color-success: #22c55e;
-  --color-error: #ef4444;
 }

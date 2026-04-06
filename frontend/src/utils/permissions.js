@@ -10,7 +10,6 @@ export const canAccess = (module, action) => {
       (p) => p.module === module && p.action === action
     ) || false;
   } catch (error) {
-    console.error('Error reading permissions from localStorage:', error);
     return false;
   }
 };

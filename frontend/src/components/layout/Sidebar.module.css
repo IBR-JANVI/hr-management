@@ -1,7 +1,7 @@
 .container {
   width: 16rem;
-  background-color: #1f2937;
-  color: white;
+  background-color: var(--color-sidebar-bg);
+  color: var(--color-text-inverse);
   min-height: 100vh;
 }
 
@@ -16,7 +16,7 @@
 
 .userText {
   font-size: var(--font-size-sm);
-  color: #9ca3af;
+  color: var(--color-text-secondary);
   margin-top: var(--spacing-1);
 }
 
@@ -28,19 +28,19 @@
   display: flex;
   align-items: center;
   padding: var(--spacing-3) var(--spacing-4);
-  color: #d1d5db;
+  color: var(--color-text-secondary);
   text-decoration: none;
   transition: all 0.15s ease;
 }
 
 .navLink:hover {
-  background-color: #374151;
-  color: white;
+  background-color: var(--color-border);
+  color: var(--color-text-primary);
 }
 
 .navLinkActive {
-  background-color: #374151;
-  color: white;
+  background-color: var(--color-border);
+  color: var(--color-text-primary);
   border-left: 4px solid var(--color-primary);
 }
 
