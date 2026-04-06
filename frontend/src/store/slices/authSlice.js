@@ -1,9 +1,24 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
+const ACCESS_TOKEN_KEY = 'accessToken';
+const REFRESH_TOKEN_KEY = 'refreshToken';
+const USER_KEY = 'user';
+
+const AUTH_SESSIONS_ENDPOINT = '/auth/sessions';
+const AUTH_TOKENS_ENDPOINT = '/auth/tokens';
+const AUTH_PROFILES_ENDPOINT = '/auth/profiles/me';
+const AUTH_USERS_ENDPOINT = '/auth/users';
+
+const FALLBACK_LOGIN_ERROR = { message: 'Login failed' };
+const FALLBACK_REGISTER_ERROR = { message: 'Registration failed' };
+const FALLBACK_PROFILE_ERROR = { message: 'Failed to fetch profile' };
+const FALLBACK_REFRESH_ERROR = { message: 'Token refresh failed' };
+const NO_REFRESH_TOKEN_ERROR = { message: 'No refresh token' };
+
 const getStoredAuth = () => {
-  const token = localStorage.getItem('accessToken');
-  const user = localStorage.getItem('user');
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+  const user = localStorage.getItem(USER_KEY);
   try {
     return {
       token: token || null,
@@ -11,6 +26,7 @@ const getStoredAuth = () => {
       isAuthenticated: !!token
     };
   } catch (error) {
+    localStorage.removeItem(USER_KEY);
     return {
       token: token || null,
       user: null,
@@ -33,15 +49,15 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await api.post('/auth/sessions', credentials, { credentials: 'include' });
+      const response = await api.post(AUTH_SESSIONS_ENDPOINT, credentials, { credentials: 'include' });
       const { user, accessToken } = response.data;
       
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
       
       return { user, token: accessToken };
     } catch (error) {
-      return rejectWithValue(error.data || { message: 'Login failed' });
+      return rejectWithValue(error.data || FALLBACK_LOGIN_ERROR);
     }
   }
 );
@@ -50,10 +66,10 @@ export const register = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await api.post('/auth/users', userData);
+      const response = await api.post(AUTH_USERS_ENDPOINT, userData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.data || { message: 'Registration failed' });
+      return rejectWithValue(error.data || FALLBACK_REGISTER_ERROR);
     }
   }
 );
@@ -62,11 +78,14 @@ export const logout = createAsyncThunk(
   'auth/logout',
   async (_, { getState, rejectWithValue }) => {
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      await api.delete('/auth/sessions', { refreshToken });
+      await api.delete(AUTH_SESSIONS_ENDPOINT);
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
       return { success: true };
     } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      return rejectWithValue(error.data || error.response?.data || error.message);
     }
   }
 );
@@ -75,12 +94,12 @@ export const fetchProfile = createAsyncThunk(
   'auth/fetchProfile',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/auth/profiles/me');
+      const response = await api.get(AUTH_PROFILES_ENDPOINT);
       const user = response.data.user;
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
       return user;
     } catch (error) {
-      return rejectWithValue(error.data || { message: 'Failed to fetch profile' });
+      return rejectWithValue(error.data || FALLBACK_PROFILE_ERROR);
     }
   }
 );
@@ -89,21 +108,15 @@ export const refreshToken = createAsyncThunk(
   'auth/refreshToken',
   async (_, { rejectWithValue }) => {
     try {
-      const refreshTokenValue = localStorage.getItem('refreshToken');
-      if (!refreshTokenValue) {
-        return rejectWithValue({ message: 'No refresh token' });
-      }
-      
-      const response = await api.post('/auth/tokens', { refreshToken: refreshTokenValue });
+      const response = await api.post(AUTH_TOKENS_ENDPOINT, {}, { withCredentials: true });
       const { accessToken } = response.data;
       
-      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
       return accessToken;
     } catch (error) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      return rejectWithValue(error.data || { message: 'Token refresh failed' });
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      return rejectWithValue(error.data || FALLBACK_REFRESH_ERROR);
     }
   }
 );
@@ -118,7 +131,7 @@ const authSlice = createSlice({
     setUser: (state, action) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
-      state.isAuthenticated = true;
+      state.isAuthenticated = Boolean(action.payload.token);
     }
   },
   extraReducers: (builder) => {
@@ -133,7 +146,7 @@ const authSlice = createSlice({
         const token = action.payload?.token || action.payload?.data?.accessToken;
         state.user = user;
         state.token = token;
-        state.isAuthenticated = true;
+        state.isAuthenticated = Boolean(token);
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
