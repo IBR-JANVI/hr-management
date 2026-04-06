@@ -105,6 +105,7 @@ const userSlice = createSlice({
     clearUserError: (state) => {
       state.error = null;
       state.actionError = null;
+      state.statsError = null;
     }
   },
   extraReducers: (builder) => {
@@ -116,8 +117,8 @@ const userSlice = createSlice({
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = action.payload.users;
-        state.pagination = action.payload.pagination;
+        state.users = action.payload?.users || action.payload?.data?.users || [];
+        state.pagination = action.payload?.pagination || action.payload?.data?.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 };
       })
       .addCase(fetchUsers.rejected, (state, action) => {
         state.loading = false;
@@ -130,7 +131,7 @@ const userSlice = createSlice({
       })
       .addCase(fetchPendingUsers.fulfilled, (state, action) => {
         state.loading = false;
-        state.pendingUsers = action.payload.users;
+        state.pendingUsers = action.payload?.users || action.payload?.data?.users || [];
       })
       .addCase(fetchPendingUsers.rejected, (state, action) => {
         state.loading = false;
@@ -143,7 +144,7 @@ const userSlice = createSlice({
       })
       .addCase(fetchUserStats.fulfilled, (state, action) => {
         state.statsLoading = false;
-        state.stats = action.payload;
+        state.stats = action.payload || action.payload?.data || null;
       })
       .addCase(fetchUserStats.rejected, (state, action) => {
         state.statsLoading = false;
@@ -156,7 +157,10 @@ const userSlice = createSlice({
       })
       .addCase(approveUser.fulfilled, (state, action) => {
         state.actionLoading.approveUser = false;
-        state.pendingUsers = state.pendingUsers.filter(user => user.id !== action.payload.user.id);
+        const user = action.payload?.user || action.payload?.data?.user;
+        if (user) {
+          state.pendingUsers = state.pendingUsers.filter(u => u.id !== user.id);
+        }
       })
       .addCase(approveUser.rejected, (state, action) => {
         state.actionLoading.approveUser = false;
@@ -169,7 +173,10 @@ const userSlice = createSlice({
       })
       .addCase(rejectUser.fulfilled, (state, action) => {
         state.actionLoading.rejectUser = false;
-        state.pendingUsers = state.pendingUsers.filter(user => user.id !== action.payload.user.id);
+        const user = action.payload?.user || action.payload?.data?.user;
+        if (user) {
+          state.pendingUsers = state.pendingUsers.filter(u => u.id !== user.id);
+        }
       })
       .addCase(rejectUser.rejected, (state, action) => {
         state.actionLoading.rejectUser = false;
@@ -184,7 +191,7 @@ const userSlice = createSlice({
         state.actionLoading.deleteUser = false;
         state.users = state.users.filter(user => user.id !== action.payload.id);
         state.pagination.total = Math.max(0, state.pagination.total - 1);
-        state.pagination.totalPages = Math.ceil(state.pagination.total / state.pagination.pageSize);
+        state.pagination.totalPages = Math.ceil(state.pagination.total / Math.max(1, state.pagination.limit));
       })
       .addCase(deleteUser.rejected, (state, action) => {
         state.actionLoading.deleteUser = false;

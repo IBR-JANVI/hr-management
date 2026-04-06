@@ -68,13 +68,9 @@ function Register() {
       return;
     }
 
-    try {
-      await dispatch(register({ name: name.trim(), email: email.trim(), password })).unwrap();
-      setRegistrationSuccess(true);
-      toast.success('Registration successful. Please wait for admin approval.');
-    } catch (err) {
-      // Error is handled in the useEffect above
-    }
+    await dispatch(register({ name: name.trim(), email: email.trim(), password })).unwrap();
+    setRegistrationSuccess(true);
+    toast.success('Registration successful. Please wait for admin approval.');
   };
 
   return (

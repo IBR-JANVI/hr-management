@@ -10,6 +10,16 @@ const PENDING_APPROVALS_PATH = '/dashboard/users/pending';
 const ROLES_PATH = '/dashboard/roles';
 const PERMISSIONS_PATH = '/dashboard/permissions';
 
+const MODULE_USERS = 'users';
+const MODULE_ROLES = 'roles';
+const MODULE_PERMISSIONS = 'permissions';
+
+const ACTION_VIEW = 'view';
+const ACTION_APPROVE = 'approve';
+const ACTION_REJECT = 'reject';
+const ACTION_CREATE = 'create';
+const ACTION_DELETE = 'delete';
+
 const LABEL_DASHBOARD = 'Dashboard';
 const LABEL_USERS = 'Users';
 const LABEL_PENDING_APPROVALS = 'Pending Approvals';
@@ -37,25 +47,25 @@ function Sidebar() {
       path: USERS_PATH,
       label: LABEL_USERS,
       icon: ICON_USERS,
-      show: canAccess('users', 'view')
+      show: canAccess(MODULE_USERS, ACTION_VIEW)
     },
     {
       path: PENDING_APPROVALS_PATH,
       label: LABEL_PENDING_APPROVALS,
       icon: ICON_PENDING_APPROVALS,
-      show: canAccess('users', 'approve')
+      show: canAccess(MODULE_USERS, ACTION_APPROVE)
     },
     {
       path: ROLES_PATH,
       label: LABEL_ROLES,
       icon: ICON_ROLES,
-      show: canAccess('roles', 'view')
+      show: canAccess(MODULE_ROLES, ACTION_VIEW)
     },
     {
       path: PERMISSIONS_PATH,
       label: LABEL_PERMISSIONS,
       icon: ICON_PERMISSIONS,
-      show: canAccess('permissions', 'view')
+      show: canAccess(MODULE_PERMISSIONS, ACTION_VIEW)
     }
   ];
 

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { logout } from '../../store/slices/authSlice';
 import styles from './Navbar.module.css';
-import { classNames } from '../../utils/helpers';
 
 function Navbar() {
   const dispatch = useDispatch();

@@ -119,6 +119,7 @@ const roleSlice = createSlice({
       state.error = null;
       state.errorCreate = null;
       state.errorDelete = null;
+      state.errorUpdate = null;
     }
   },
   extraReducers: (builder) => {
@@ -129,7 +130,7 @@ const roleSlice = createSlice({
       })
       .addCase(fetchRoles.fulfilled, (state, action) => {
         state.loading = false;
-        state.roles = action.payload.roles;
+        state.roles = action.payload?.roles || action.payload?.data?.roles || [];
       })
       .addCase(fetchRoles.rejected, (state, action) => {
         state.loading = false;
@@ -141,7 +142,8 @@ const roleSlice = createSlice({
       })
       .addCase(createRole.fulfilled, (state, action) => {
         state.loadingCreate = false;
-        state.roles.push(action.payload.role);
+        const role = action.payload?.role || action.payload?.data?.role;
+        if (role) state.roles.push(role);
       })
       .addCase(createRole.rejected, (state, action) => {
         state.loadingCreate = false;
@@ -153,9 +155,12 @@ const roleSlice = createSlice({
       })
       .addCase(updateRole.fulfilled, (state, action) => {
         state.loadingUpdate = false;
-        const index = state.roles.findIndex(role => role.id === action.payload.role.id);
-        if (index !== -1) {
-          state.roles[index] = action.payload.role;
+        const role = action.payload?.role || action.payload?.data?.role;
+        if (role) {
+          const index = state.roles.findIndex(r => r.id === role.id);
+          if (index !== -1) {
+            state.roles[index] = role;
+          }
         }
       })
       .addCase(updateRole.rejected, (state, action) => {
@@ -168,23 +173,59 @@ const roleSlice = createSlice({
       })
       .addCase(deleteRole.fulfilled, (state, action) => {
         state.loadingDelete = false;
-        state.roles = state.roles.filter(r => r.id !== action.payload.id);
+        state.roles = state.roles.filter(role => role.id !== action.payload.id);
       })
       .addCase(deleteRole.rejected, (state, action) => {
         state.loadingDelete = false;
         state.errorDelete = action.payload;
       })
+      .addCase(fetchPermissions.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchPermissions.fulfilled, (state, action) => {
-        state.permissions = action.payload.permissions;
+        state.loading = false;
+        state.permissions = action.payload?.permissions || action.payload?.data?.permissions || [];
+      })
+      .addCase(fetchPermissions.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchModules.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
       .addCase(fetchModules.fulfilled, (state, action) => {
-        state.modules = action.payload.modules;
+        state.loading = false;
+        state.modules = action.payload?.modules || action.payload?.data?.modules || [];
+      })
+      .addCase(fetchModules.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(createPermission.pending, (state) => {
+        state.loadingCreate = true;
+        state.errorCreate = null;
       })
       .addCase(createPermission.fulfilled, (state, action) => {
-        state.permissions.push(action.payload.permission);
+        state.loadingCreate = false;
+        state.permissions.push(action.payload?.permission || action.payload?.data?.permission);
+      })
+      .addCase(createPermission.rejected, (state, action) => {
+        state.loadingCreate = false;
+        state.errorCreate = action.payload;
+      })
+      .addCase(deletePermission.pending, (state) => {
+        state.loadingDelete = true;
+        state.errorDelete = null;
       })
       .addCase(deletePermission.fulfilled, (state, action) => {
-        state.permissions = state.permissions.filter(p => p.id !== action.payload.id);
+        state.loadingDelete = false;
+        state.permissions = state.permissions.filter(permission => permission.id !== action.payload.id);
+      })
+      .addCase(deletePermission.rejected, (state, action) => {
+        state.loadingDelete = false;
+        state.errorDelete = action.payload;
       });
   }
 });

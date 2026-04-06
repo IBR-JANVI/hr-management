@@ -72,15 +72,15 @@ function Dashboard() {
       </h1>
 
       <div className={styles.statsGrid}>
-        {statCards.map((stat, index) => (
-          <div key={index} className={styles.statCard}>
+        {statCards.map((stat) => (
+          <div key={stat.title} className={styles.statCard}>
             <div className={styles.statCardHeader}>
               <div>
                 <p className={styles.statLabel}>{stat.title}</p>
                 <p className={styles.valueLarge}>{stat.value}</p>
               </div>
               <div className={styles.statIcon} style={{ backgroundColor: stat.color }}>
-                <span style={{ color: 'var(--color-on-error)', fontSize: 'var(--font-size-xl)' }}>{stat.icon}</span>
+                <span className={styles.statIconText}>{stat.icon}</span>
               </div>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchUsers, deleteUser } from '../../store/slices/userSlice';
 import { usePermissions } from '../../hooks/usePermissions';
+import { useDebounce } from '../../hooks/useDebounce';
 import { formatDate } from '../../utils/helpers';
 
 function Users() {
@@ -11,6 +12,7 @@ function Users() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
 
   const { canAccess } = usePermissions();
   const canDelete = canAccess('users', 'delete');
@@ -21,8 +23,8 @@ function Users() {
   };
 
   useEffect(() => {
-    dispatch(fetchUsers({ page, search, status }));
-  }, [dispatch, page, search, status]);
+    dispatch(fetchUsers({ page, search: debouncedSearch, status }));
+  }, [dispatch, page, debouncedSearch, status]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -45,7 +47,7 @@ function Users() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-6)' }}>
         <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: '700', color: 'var(--color-text-primary)' }}>User Management</h1>
         {canCreate && (
-          <button onClick={handleCreateUser} style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}>
+          <button type="button" onClick={handleCreateUser} style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}>
             Create User
           </button>
         )}
@@ -76,7 +78,7 @@ function Users() {
           </select>
           <button
             type="submit"
-            style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
+            style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
           >
             Search
           </button>
@@ -147,7 +149,7 @@ function Users() {
                         fontSize: 'var(--font-size-sm)',
                         borderRadius: 'var(--radius-full)',
                         backgroundColor: user.status === 'ACTIVE' ? 'var(--color-success)' : user.status === 'PENDING' ? 'var(--color-warning)' : 'var(--color-error)',
-                        color: 'white'
+                        color: 'var(--color-on-primary)'
                       }}
                     >
                       {user.status}

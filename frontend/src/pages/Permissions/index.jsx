@@ -161,7 +161,7 @@ function Permissions() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
               <div>
-                <label htmlFor="permission-module" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="permission-module" style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-700)' }}>
                   Module
                 </label>
                 <input
@@ -175,7 +175,7 @@ function Permissions() {
               </div>
 
               <div>
-                <label htmlFor="permission-action" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="permission-action" style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-700)' }}>
                   Action
                 </label>
                 <input
@@ -190,12 +190,13 @@ function Permissions() {
 
               {modules.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-700)', marginBottom: 'var(--spacing-2)' }}>
                     Existing Modules
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-2)' }}>
                     {modules.map((m) => (
                       <button
+                        type="button"
                         key={m}
                         onClick={() => setNewPermission({ ...newPermission, module: m })}
                         style={{ padding: 'var(--spacing-1) var(--spacing-3)', backgroundColor: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-full)', fontSize: 'var(--font-size-sm)', border: 'none', cursor: 'pointer', textTransform: 'capitalize' }}

@@ -1,0 +1,179 @@
+.root {
+  display: block;
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-6);
+}
+
+.emptyState {
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-6);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-6);
+}
+
+.card {
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-6);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-4);
+}
+
+.userName {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.userEmail {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.statusBadge {
+  padding: var(--spacing-1) var(--spacing-2);
+  font-size: var(--font-size-sm);
+  background-color: var(--color-warning);
+  color: var(--color-on-warning);
+  border-radius: var(--radius-full);
+}
+
+.registeredText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--spacing-4);
+}
+
+.buttonGroup {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.approveButton {
+  flex: 1;
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--color-success);
+  color: var(--color-on-success);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+}
+
+.rejectButton {
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--color-error);
+  color: var(--color-on-error);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-overlay-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+
+.modalContent {
+  background-color: var(--color-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-6);
+  max-width: 28rem;
+  width: 100%;
+  margin: var(--spacing-4);
+}
+
+.modalTitle {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-4);
+}
+
+.modalDescription {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-4);
+}
+
+.roleList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-6);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.roleLabel {
+  display: flex;
+  align-items: center;
+}
+
+.roleCheckbox {
+  margin-right: var(--spacing-2);
+}
+
+.roleName {
+  color: var(--color-text-primary);
+}
+
+.roleDefault {
+  margin-left: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.cancelButton {
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+}
+
+.loadingWrapper {
+  padding: var(--spacing-8);
+  text-align: center;
+}
+
+.lockedContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16rem;
+}
+
+.lockedText {
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.lockedIcon {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-2);
+}

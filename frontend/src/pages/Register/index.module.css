@@ -68,10 +68,15 @@
 .checkbox {
   height: 1rem;
   width: 1rem;
-  text-blue-600;
-  focus-ring-blue-500;
-  border-gray-300;
-  border-radius: rounded;
+  accent-color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.checkbox:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .checkboxText {
@@ -90,7 +95,34 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed;
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submitButton:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.submitButton:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.submitButton:active {
+  background-color: var(--color-primary);
+  transform: translateY(1px);
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .successContainer {
@@ -113,23 +145,51 @@
 .successTitle {
   font-size: var(--font-size-lg);
   font-weight: 600;
-  color: var(--color-on-error);
+  color: var(--color-on-success);
   margin-bottom: var(--spacing-2);
 }
 
 .successText {
-  color: var(--color-on-error);
+  color: var(--color-on-success);
 }
 
 .loginLink {
   display: inline-block;
   width: 100%;
-  py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
+  padding: var(--spacing-3) var(--spacing-4);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.loginLink:hover {
+  background-color: var(--color-primary-hover);
+  text-decoration: none;
+}
+
+.loginLink:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.loginLink:active {
+  background-color: var(--color-primary);
+  transform: translateY(1px);
 }
 
 .footer {
   margin-top: var(--spacing-6);
   text-align: center;
+}
+
+.footerText {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
