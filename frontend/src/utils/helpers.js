@@ -1,35 +1,31 @@
+const LOCALE = 'en-US';
+
+const DATE_OPTIONS = {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+};
+
+const DATETIME_OPTIONS = {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+};
+
 export function formatDate(date) {
   if (!date) return '';
-  const d = new Date(date);
-  return d.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  const dateObj = new Date(date);
+  if (isNaN(dateObj.getTime())) return '';
+  return dateObj.toLocaleDateString(LOCALE, DATE_OPTIONS);
 }
 
 export function formatDateTime(date) {
   if (!date) return '';
-  const d = new Date(date);
-  return d.toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-export function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
+  const dateObj = new Date(date);
+  if (isNaN(dateObj.getTime())) return '';
+  return dateObj.toLocaleString(LOCALE, DATETIME_OPTIONS);
 }
 
 export function classNames(...classes) {

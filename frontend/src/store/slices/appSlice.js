@@ -38,4 +38,8 @@ export const {
   removeNotification,
 } = appSlice.actions;
 
+export const selectAppLoading = (state) => state.app.loading;
+export const selectAppError = (state) => state.app.error;
+export const selectAppNotifications = (state) => state.app.notifications;
+
 export default appSlice.reducer;

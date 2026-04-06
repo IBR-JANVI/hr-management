@@ -4,11 +4,20 @@ import api from '../../services/api';
 const getStoredAuth = () => {
   const token = localStorage.getItem('accessToken');
   const user = localStorage.getItem('user');
-  return {
-    token: token || null,
-    user: user ? JSON.parse(user) : null,
-    isAuthenticated: !!token
-  };
+  try {
+    return {
+      token: token || null,
+      user: user ? JSON.parse(user) : null,
+      isAuthenticated: !!token
+    };
+  } catch (error) {
+    console.error('Error parsing stored auth:', error);
+    return {
+      token: token || null,
+      user: null,
+      isAuthenticated: !!token
+    };
+  }
 };
 
 const storedAuth = getStoredAuth();
@@ -21,13 +30,11 @@ const initialState = {
   error: null
 };
 
-// Login
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await api.post('/auth/login', credentials);
-      // API returns { success: true, data: { user, accessToken, refreshToken }, error: null }
       const { user, accessToken, refreshToken } = response.data;
       
       localStorage.setItem('accessToken', accessToken);
@@ -41,7 +48,6 @@ export const login = createAsyncThunk(
   }
 );
 
-// Register
 export const register = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
@@ -54,7 +60,6 @@ export const register = createAsyncThunk(
   }
 );
 
-// Logout
 export const logout = createAsyncThunk(
   'auth/logout',
   async (_, { getState, rejectWithValue }) => {
@@ -72,20 +77,20 @@ export const logout = createAsyncThunk(
   }
 );
 
-// Get profile
 export const fetchProfile = createAsyncThunk(
   'auth/fetchProfile',
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.get('/auth/profile');
-      return response.data.user;
+      const user = response.data.user;
+      localStorage.setItem('user', JSON.stringify(user));
+      return user;
     } catch (error) {
       return rejectWithValue(error.data || { message: 'Failed to fetch profile' });
     }
   }
 );
 
-// Refresh token
 export const refreshToken = createAsyncThunk(
   'auth/refreshToken',
   async (_, { rejectWithValue }) => {
@@ -124,7 +129,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -139,7 +143,6 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Register
       .addCase(register.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -151,18 +154,14 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Logout
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
       })
-      // Fetch profile
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.user = action.payload;
-        localStorage.setItem('user', JSON.stringify(action.payload));
       })
-      // Refresh token
       .addCase(refreshToken.fulfilled, (state, action) => {
         state.token = action.payload;
       })

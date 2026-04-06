@@ -1,0 +1,66 @@
+.nav {
+  background-color: var(--color-bg-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 var(--spacing-4);
+}
+
+.inner {
+  display: flex;
+  justify-content: space-between;
+  height: 4rem;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+}
+
+.brandText {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.userDetails {
+  display: flex;
+  align-items: center;
+}
+
+.userName {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-right: var(--spacing-2);
+}
+
+.role {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.logoutButton {
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logoutButton:hover {
+  color: var(--color-error-hover);
+  background-color: rgba(239, 68, 68, 0.1);
+}

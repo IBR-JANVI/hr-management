@@ -1,10 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
 import api from '../../services/api';
 
 const initialState = {
   users: [],
   pendingUsers: [],
   stats: null,
+  statsLoading: false,
+  statsError: null,
   pagination: {
     page: 1,
     limit: 10,
@@ -12,7 +15,9 @@ const initialState = {
     totalPages: 0
   },
   loading: false,
-  error: null
+  error: null,
+  actionLoading: {},
+  actionError: null
 };
 
 // Fetch all users
@@ -23,7 +28,7 @@ export const fetchUsers = createAsyncThunk(
       const response = await api.get('/users', { params });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch users' });
+      return rejectWithValue(error.data || { message: 'Failed to fetch users' });
     }
   }
 );
@@ -36,7 +41,7 @@ export const fetchPendingUsers = createAsyncThunk(
       const response = await api.get('/users/pending');
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch pending users' });
+      return rejectWithValue(error.data || { message: 'Failed to fetch pending users' });
     }
   }
 );
@@ -49,7 +54,7 @@ export const fetchUserStats = createAsyncThunk(
       const response = await api.get('/users/stats');
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to fetch stats' });
+      return rejectWithValue(error.data || { message: 'Failed to fetch stats' });
     }
   }
 );
@@ -62,7 +67,7 @@ export const approveUser = createAsyncThunk(
       const response = await api.put(`/users/${id}/approve`, { roleIds });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to approve user' });
+      return rejectWithValue(error.data || { message: 'Failed to approve user' });
     }
   }
 );
@@ -75,7 +80,7 @@ export const rejectUser = createAsyncThunk(
       const response = await api.put(`/users/${id}/reject`);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to reject user' });
+      return rejectWithValue(error.data || { message: 'Failed to reject user' });
     }
   }
 );
@@ -88,7 +93,7 @@ export const deleteUser = createAsyncThunk(
       const response = await api.delete(`/users/${id}`);
       return { id, ...response.data };
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: 'Failed to delete user' });
+      return rejectWithValue(error.data || { message: 'Failed to delete user' });
     }
   }
 );
@@ -99,6 +104,7 @@ const userSlice = createSlice({
   reducers: {
     clearUserError: (state) => {
       state.error = null;
+      state.actionError = null;
     }
   },
   extraReducers: (builder) => {
@@ -131,20 +137,56 @@ const userSlice = createSlice({
         state.error = action.payload;
       })
       // Fetch stats
+      .addCase(fetchUserStats.pending, (state) => {
+        state.statsLoading = true;
+        state.statsError = null;
+      })
       .addCase(fetchUserStats.fulfilled, (state, action) => {
+        state.statsLoading = false;
         state.stats = action.payload;
       })
+      .addCase(fetchUserStats.rejected, (state, action) => {
+        state.statsLoading = false;
+        state.statsError = action.payload || { message: 'Failed to load stats' };
+      })
       // Approve user
+      .addCase(approveUser.pending, (state) => {
+        state.actionLoading.approveUser = true;
+        state.actionError = null;
+      })
       .addCase(approveUser.fulfilled, (state, action) => {
-        state.pendingUsers = state.pendingUsers.filter(u => u.id !== action.payload.user.id);
+        state.actionLoading.approveUser = false;
+        state.pendingUsers = state.pendingUsers.filter(user => user.id !== action.payload.user.id);
+      })
+      .addCase(approveUser.rejected, (state, action) => {
+        state.actionLoading.approveUser = false;
+        state.actionError = action.error || action.payload;
       })
       // Reject user
+      .addCase(rejectUser.pending, (state) => {
+        state.actionLoading.rejectUser = true;
+        state.actionError = null;
+      })
       .addCase(rejectUser.fulfilled, (state, action) => {
-        state.pendingUsers = state.pendingUsers.filter(u => u.id !== action.payload.user.id);
+        state.actionLoading.rejectUser = false;
+        state.pendingUsers = state.pendingUsers.filter(user => user.id !== action.payload.user.id);
+      })
+      .addCase(rejectUser.rejected, (state, action) => {
+        state.actionLoading.rejectUser = false;
+        state.actionError = action.error || action.payload;
       })
       // Delete user
+      .addCase(deleteUser.pending, (state) => {
+        state.actionLoading.deleteUser = true;
+        state.actionError = null;
+      })
       .addCase(deleteUser.fulfilled, (state, action) => {
-        state.users = state.users.filter(u => u.id !== action.payload.id);
+        state.actionLoading.deleteUser = false;
+        state.users = state.users.filter(user => user.id !== action.payload.id);
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
+        state.actionLoading.deleteUser = false;
+        state.actionError = action.error || action.payload;
       });
   }
 });
