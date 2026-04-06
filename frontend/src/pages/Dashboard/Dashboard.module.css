@@ -1,0 +1,134 @@
+.wrapper {
+  padding: 0;
+}
+
+.header {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-6);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-6);
+  margin-bottom: var(--spacing-8);
+}
+
+.statCard {
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-6);
+}
+
+.statCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statIcon {
+  border-radius: var(--radius-full);
+  padding: var(--spacing-3);
+}
+
+.statIconText {
+  color: var(--color-on-error);
+  font-size: var(--font-size-xl);
+}
+
+.panel {
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-6);
+}
+
+.panelHeader {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-4);
+}
+
+.profileRow {
+  display: flex;
+  align-items: center;
+}
+
+.badge {
+  padding: var(--spacing-1) var(--spacing-2);
+  background-color: var(--color-success);
+  color: var(--color-on-error);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+}
+
+.permissionsTag {
+  padding: var(--spacing-1) var(--spacing-3);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-8);
+}
+
+.errorContainer {
+  padding: var(--spacing-8);
+  color: var(--color-error);
+}
+
+.emptyContainer {
+  padding: var(--spacing-8);
+  color: var(--color-text-muted);
+}
+
+.label {
+  color: var(--color-text-muted);
+  width: var(--label-width, var(--spacing-6));
+}
+
+.value {
+  color: var(--color-text-primary);
+}
+
+.subLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-1);
+}
+
+.titleLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.valueLarge {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-top: var(--spacing-1);
+}
+
+.noPermissions {
+  color: var(--color-text-muted);
+}
+
+.statLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.permissionsWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}

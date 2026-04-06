@@ -10,8 +10,6 @@ const { userCache, CACHE_TTL_SECONDS } = require('../../config/cache');
 const config = getConfig();
 const { JWT_SECRET } = config;
 
-const CACHE_TTL_SECONDS = 300;
-
 const USER_STATUS_ACTIVE = 'ACTIVE';
 
 const authMiddleware = async (req, res, next) => {
