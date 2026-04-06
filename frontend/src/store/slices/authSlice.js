@@ -11,7 +11,6 @@ const getStoredAuth = () => {
       isAuthenticated: !!token
     };
   } catch (error) {
-    console.error('Error parsing stored auth:', error);
     return {
       token: token || null,
       user: null,
@@ -164,6 +163,7 @@ const authSlice = createSlice({
       })
       .addCase(refreshToken.fulfilled, (state, action) => {
         state.token = action.payload;
+        state.isAuthenticated = Boolean(action.payload);
       })
       .addCase(refreshToken.rejected, (state) => {
         state.user = null;

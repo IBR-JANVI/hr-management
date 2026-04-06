@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { canAccess } from '../../utils/permissions';
+import { usePermissions } from '../../hooks/usePermissions';
 import styles from './Sidebar.module.css';
 import { classNames } from '../../utils/helpers';
 
@@ -22,15 +22,9 @@ const ICON_PENDING_APPROVALS = '⏳';
 const ICON_ROLES = '🔐';
 const ICON_PERMISSIONS = '🔑';
 
-const MODULE_USERS = 'users';
-const MODULE_ROLES = 'roles';
-const MODULE_PERMISSIONS = 'permissions';
-
-const ACTION_VIEW = 'view';
-const ACTION_APPROVE = 'approve';
-
 function Sidebar() {
   const { user } = useSelector((state) => state.auth);
+  const { canAccess } = usePermissions();
 
   const menuItems = [
     {
@@ -43,25 +37,25 @@ function Sidebar() {
       path: USERS_PATH,
       label: LABEL_USERS,
       icon: ICON_USERS,
-      show: canAccess(MODULE_USERS, ACTION_VIEW)
+      show: canAccess('users', 'view')
     },
     {
       path: PENDING_APPROVALS_PATH,
       label: LABEL_PENDING_APPROVALS,
       icon: ICON_PENDING_APPROVALS,
-      show: canAccess(MODULE_USERS, ACTION_APPROVE)
+      show: canAccess('users', 'approve')
     },
     {
       path: ROLES_PATH,
       label: LABEL_ROLES,
       icon: ICON_ROLES,
-      show: canAccess(MODULE_ROLES, ACTION_VIEW)
+      show: canAccess('roles', 'view')
     },
     {
       path: PERMISSIONS_PATH,
       label: LABEL_PERMISSIONS,
       icon: ICON_PERMISSIONS,
-      show: canAccess(MODULE_PERMISSIONS, ACTION_VIEW)
+      show: canAccess('permissions', 'view')
     }
   ];
 
@@ -86,7 +80,7 @@ function Sidebar() {
               )
             }
           >
-            <span className={styles.icon}>{item.icon}</span>
+            <span className={styles.icon} aria-hidden="true">{item.icon}</span>
             <span className={styles.label}>{item.label}</span>
           </NavLink>
         ))}

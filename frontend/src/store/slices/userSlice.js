@@ -160,7 +160,7 @@ const userSlice = createSlice({
       })
       .addCase(approveUser.rejected, (state, action) => {
         state.actionLoading.approveUser = false;
-        state.actionError = action.error || action.payload;
+        state.actionError = action.payload || action.error;
       })
       // Reject user
       .addCase(rejectUser.pending, (state) => {
@@ -173,7 +173,7 @@ const userSlice = createSlice({
       })
       .addCase(rejectUser.rejected, (state, action) => {
         state.actionLoading.rejectUser = false;
-        state.actionError = action.error || action.payload;
+        state.actionError = action.payload || action.error;
       })
       // Delete user
       .addCase(deleteUser.pending, (state) => {
@@ -183,10 +183,12 @@ const userSlice = createSlice({
       .addCase(deleteUser.fulfilled, (state, action) => {
         state.actionLoading.deleteUser = false;
         state.users = state.users.filter(user => user.id !== action.payload.id);
+        state.pagination.total = Math.max(0, state.pagination.total - 1);
+        state.pagination.totalPages = Math.ceil(state.pagination.total / state.pagination.pageSize);
       })
       .addCase(deleteUser.rejected, (state, action) => {
         state.actionLoading.deleteUser = false;
-        state.actionError = action.error || action.payload;
+        state.actionError = action.payload || action.error;
       });
   }
 });

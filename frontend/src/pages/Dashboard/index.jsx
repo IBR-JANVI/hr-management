@@ -1,14 +1,12 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUserStats } from '../../store/slices/userSlice';
-import { canAccess } from '../../utils/permissions';
+import styles from './Dashboard.module.css';
 
 function Dashboard() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { stats, statsLoading, statsError } = useSelector((state) => state.users);
-
-  const canViewUsers = canAccess('users', 'view');
 
   useEffect(() => {
     dispatch(fetchUserStats());
@@ -44,7 +42,7 @@ function Dashboard() {
   if (statsLoading) {
     return (
       <div aria-busy="true" aria-live="polite">
-        <div className="loading-container" style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+        <div className={styles.loadingContainer}>
           Loading...
         </div>
       </div>
@@ -53,7 +51,7 @@ function Dashboard() {
 
   if (statsError) {
     return (
-      <div className="error-container" style={{ padding: '2rem', color: 'var(--color-error)' }}>
+      <div className={styles.errorContainer}>
         {statsError.message || 'Failed to load stats'}
       </div>
     );
@@ -61,7 +59,7 @@ function Dashboard() {
 
   if (!stats || (stats.totalUsers === 0 && stats.activeUsers === 0 && stats.pendingUsers === 0 && stats.rejectedUsers === 0)) {
     return (
-      <div className="empty-container" style={{ padding: '2rem', color: 'var(--color-text-muted)' }}>
+      <div className={styles.emptyContainer}>
         No data available
       </div>
     );
@@ -69,70 +67,70 @@ function Dashboard() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: '700', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-6)' }}>
+      <h1 className={styles.header}>
         Welcome back, {user?.name}!
       </h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 'var(--spacing-6)', marginBottom: 'var(--spacing-8)' }}>
+      <div className={styles.statsGrid}>
         {statCards.map((stat, index) => (
-          <div key={index} style={{ backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', padding: 'var(--spacing-6)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div key={index} className={styles.statCard}>
+            <div className={styles.statCardHeader}>
               <div>
-                <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>{stat.title}</p>
-                <p style={{ fontSize: 'var(--font-size-2xl)', fontWeight: '700', color: 'var(--color-text-primary)', marginTop: 'var(--spacing-1)' }}>{stat.value}</p>
+                <p className={styles.statLabel}>{stat.title}</p>
+                <p className={styles.valueLarge}>{stat.value}</p>
               </div>
-              <div style={{ backgroundColor: stat.color, borderRadius: 'var(--radius-full)', padding: 'var(--spacing-3)' }}>
-                <span style={{ color: 'white', fontSize: 'var(--font-size-xl)' }}>{stat.icon}</span>
+              <div className={styles.statIcon} style={{ backgroundColor: stat.color }}>
+                <span style={{ color: 'var(--color-on-error)', fontSize: 'var(--font-size-xl)' }}>{stat.icon}</span>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div style={{ backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', padding: 'var(--spacing-6)' }}>
-        <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-4)' }}>
+      <div className={styles.panel}>
+        <h2 className={styles.panelHeader}>
           Your Profile
         </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: 'var(--color-text-muted)', width: '6rem' }}>Name:</span>
-            <span style={{ color: 'var(--color-text-primary)' }}>{user?.name}</span>
+          <div className={styles.profileRow}>
+            <span className={styles.label}>Name:</span>
+            <span className={styles.value}>{user?.name}</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: 'var(--color-text-muted)', width: '6rem' }}>Email:</span>
-            <span style={{ color: 'var(--color-text-primary)' }}>{user?.email}</span>
+          <div className={styles.profileRow}>
+            <span className={styles.label}>Email:</span>
+            <span className={styles.value}>{user?.email}</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: 'var(--color-text-muted)', width: '6rem' }}>Role:</span>
-            <span style={{ color: 'var(--color-text-primary)' }}>
+          <div className={styles.profileRow}>
+            <span className={styles.label}>Role:</span>
+            <span className={styles.value}>
               {user?.roles?.[0]?.name || 'User'}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: 'var(--color-text-muted)', width: '6rem' }}>Status:</span>
-            <span style={{ padding: 'var(--spacing-1) var(--spacing-2)', backgroundColor: 'var(--color-success)', color: 'white', borderRadius: 'var(--radius-full)', fontSize: 'var(--font-size-sm)' }}>
+          <div className={styles.profileRow}>
+            <span className={styles.label}>Status:</span>
+            <span className={styles.badge}>
               Active
             </span>
           </div>
         </div>
       </div>
 
-      <div style={{ marginTop: 'var(--spacing-6)', backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', padding: 'var(--spacing-6)' }}>
-        <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-4)' }}>
+      <div className={styles.panel}>
+        <h2 className={styles.panelHeader}>
           Your Permissions
         </h2>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-2)' }}>
+        <div className={styles.permissionsWrapper}>
           {user?.permissions && user.permissions.length > 0 ? (
             user.permissions.map((permission, index) => (
               <span
                 key={index}
-                style={{ padding: 'var(--spacing-1) var(--spacing-3)', backgroundColor: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-full)', fontSize: 'var(--font-size-sm)' }}
+                className={styles.permissionsTag}
               >
                 {permission.module}: {permission.action}
               </span>
             ))
           ) : (
-            <p style={{ color: 'var(--color-text-muted)' }}>No permissions assigned</p>
+            <p className={styles.noPermissions}>No permissions assigned</p>
           )}
         </div>
       </div>

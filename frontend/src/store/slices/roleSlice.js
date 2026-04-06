@@ -9,8 +9,10 @@ const initialState = {
   error: null,
   loadingCreate: false,
   loadingDelete: false,
+  loadingUpdate: false,
   errorCreate: null,
-  errorDelete: null
+  errorDelete: null,
+  errorUpdate: null
 };
 
 export const fetchRoles = createAsyncThunk(
@@ -145,11 +147,20 @@ const roleSlice = createSlice({
         state.loadingCreate = false;
         state.errorCreate = action.payload;
       })
+      .addCase(updateRole.pending, (state) => {
+        state.loadingUpdate = true;
+        state.errorUpdate = null;
+      })
       .addCase(updateRole.fulfilled, (state, action) => {
-        const index = state.roles.findIndex(r => r.id === action.payload.role.id);
+        state.loadingUpdate = false;
+        const index = state.roles.findIndex(role => role.id === action.payload.role.id);
         if (index !== -1) {
           state.roles[index] = action.payload.role;
         }
+      })
+      .addCase(updateRole.rejected, (state, action) => {
+        state.loadingUpdate = false;
+        state.errorUpdate = action.payload;
       })
       .addCase(deleteRole.pending, (state) => {
         state.loadingDelete = true;

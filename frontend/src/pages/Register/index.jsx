@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { register, clearAuthError } from '../../store/slices/authSlice';
+import styles from './index.module.css';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 6;
@@ -68,7 +69,7 @@ function Register() {
     }
 
     try {
-      const result = await dispatch(register({ name: name.trim(), email: email.trim(), password })).unwrap();
+      await dispatch(register({ name: name.trim(), email: email.trim(), password })).unwrap();
       setRegistrationSuccess(true);
       toast.success('Registration successful. Please wait for admin approval.');
     } catch (err) {
@@ -77,33 +78,33 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">HRM System</h1>
-          <p className="text-gray-600 mt-2">Create a new account</p>
+    <div className={styles.container}>
+      <div className={styles.card}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>HRM System</h1>
+          <p className={styles.subtitle}>Create a new account</p>
         </div>
 
         {registrationSuccess ? (
-          <div className="text-center">
-            <div className="mb-6 p-6 bg-green-50 border border-green-200 rounded-lg">
-              <div className="text-4xl mb-3">✓</div>
-              <h3 className="text-lg font-semibold text-green-800 mb-2">Registration Successful!</h3>
-              <p className="text-green-700">
+          <div className={styles.successContainer}>
+            <div className={styles.successBox}>
+              <div className={styles.successIcon}>✓</div>
+              <h3 className={styles.successTitle}>Registration Successful!</h3>
+              <p className={styles.successText}>
                 Your account is pending approval. You will be able to login after admin approval.
               </p>
             </div>
             <Link
               to="/login"
-              className="inline-block w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className={styles.loginLink}
             >
               Go to Login
             </Link>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className={styles.form}>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="name" className={styles.label}>
                 Full Name
               </label>
               <input
@@ -114,13 +115,13 @@ function Register() {
                   setName(e.target.value);
                   setValidationError('');
                 }}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={styles.input}
                 placeholder="Enter your name"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className={styles.label}>
                 Email
               </label>
               <input
@@ -131,13 +132,13 @@ function Register() {
                   setEmail(e.target.value);
                   setValidationError('');
                 }}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={styles.input}
                 placeholder="Enter your email"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className={styles.label}>
                 Password
               </label>
               <input
@@ -148,13 +149,13 @@ function Register() {
                   setPassword(e.target.value);
                   setValidationError('');
                 }}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={styles.input}
                 placeholder="Create a password"
               />
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="confirmPassword" className={styles.label}>
                 Confirm Password
               </label>
               <input
@@ -165,24 +166,24 @@ function Register() {
                   setConfirmPassword(e.target.value);
                   setValidationError('');
                 }}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className={styles.input}
                 placeholder="Confirm your password"
               />
             </div>
 
             {validationError && (
-              <p className="text-sm text-red-600">{validationError}</p>
+              <p className={styles.error}>{validationError}</p>
             )}
 
-            <div className="flex items-center">
+            <div className={styles.checkboxLabel}>
               <input
                 id="showPassword"
                 type="checkbox"
                 checked={showPassword}
                 onChange={(e) => setShowPassword(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className={styles.checkbox}
               />
-              <label htmlFor="showPassword" className="ml-2 block text-sm text-gray-700">
+              <label htmlFor="showPassword" className={styles.checkboxText}>
                 Show password
               </label>
             </div>
@@ -190,17 +191,18 @@ function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-busy={loading}
+              className={styles.submitButton}
             >
               {loading ? 'Creating account...' : 'Register'}
             </button>
           </form>
         )}
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+        <div className={styles.footer}>
+          <p className={styles.footerText}>
             Already have an account?{' '}
-            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link to="/login" className={styles.footerLink}>
               Sign in
             </Link>
           </p>

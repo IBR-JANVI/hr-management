@@ -39,7 +39,7 @@ async function handleResponse(response) {
   }
 
   if (!response.ok) {
-    const message = typeof data === 'string' ? data.trim() : (data?.message || 'An error occurred');
+    const message = typeof data === 'string' && data.trim() ? data.trim() : (data?.message || 'An error occurred');
     throw new ApiError(
       message,
       response.status,

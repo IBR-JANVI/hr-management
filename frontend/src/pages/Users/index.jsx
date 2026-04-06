@@ -3,10 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchUsers, deleteUser } from '../../store/slices/userSlice';
 import { usePermissions } from '../../hooks/usePermissions';
+import { formatDate } from '../../utils/helpers';
 
 function Users() {
   const dispatch = useDispatch();
-  const { users, loading, pagination } = useSelector((state) => state.users);
+  const { users, loading, error, pagination } = useSelector((state) => state.users);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -14,6 +15,10 @@ function Users() {
   const { canAccess } = usePermissions();
   const canDelete = canAccess('users', 'delete');
   const canCreate = canAccess('users', 'create');
+
+  const handleCreateUser = () => {
+    toast.success('Create user feature coming soon');
+  };
 
   useEffect(() => {
     dispatch(fetchUsers({ page, search, status }));
@@ -40,7 +45,7 @@ function Users() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-6)' }}>
         <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: '700', color: 'var(--color-text-primary)' }}>User Management</h1>
         {canCreate && (
-          <button style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}>
+          <button onClick={handleCreateUser} style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}>
             Create User
           </button>
         )}
@@ -105,6 +110,13 @@ function Users() {
             </tr>
           </thead>
           <tbody style={{ backgroundColor: 'var(--color-bg-primary)', borderTop: '1px solid var(--color-border)' }}>
+            {error && (
+              <tr>
+                <td colSpan={canDelete ? 6 : 5} style={{ padding: 'var(--spacing-4)', textAlign: 'center', color: 'var(--color-error)' }}>
+                  {error.message || 'Failed to load users'}
+                </td>
+              </tr>
+            )}
             {loading ? (
               <tr aria-busy="true">
                 <td colSpan={canDelete ? 6 : 5} style={{ padding: 'var(--spacing-4)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
@@ -148,7 +160,7 @@ function Users() {
                   </td>
                   <td style={{ padding: 'var(--spacing-4)', whiteSpace: 'nowrap' }}>
                     <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>
-                      {new Date(user.createdAt).toLocaleDateString()}
+                      {formatDate(user.createdAt)}
                     </div>
                   </td>
                   {canDelete && (

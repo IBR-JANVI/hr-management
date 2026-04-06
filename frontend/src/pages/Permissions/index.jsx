@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { fetchPermissions, fetchModules, createPermission, deletePermission } from '../../store/slices/roleSlice';
@@ -9,6 +9,8 @@ function Permissions() {
   const { permissions, modules, loading } = useSelector((state) => state.roles);
   const [showModal, setShowModal] = useState(false);
   const [newPermission, setNewPermission] = useState({ module: '', action: '' });
+  const modalRef = useRef(null);
+  const firstFocusableRef = useRef(null);
 
   const canCreate = canAccess('permissions', 'create');
   const canDelete = canAccess('permissions', 'delete');
@@ -28,6 +30,24 @@ function Permissions() {
     dispatch(fetchPermissions());
     dispatch(fetchModules());
   }, [dispatch]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && showModal) {
+        setShowModal(false);
+        setNewPermission({ module: '', action: '' });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showModal]);
+
+  useEffect(() => {
+    if (showModal && firstFocusableRef.current) {
+      firstFocusableRef.current.focus();
+    }
+  }, [showModal]);
 
   const handleCreatePermission = async () => {
     if (newPermission.module && newPermission.action) {
@@ -70,6 +90,7 @@ function Permissions() {
         <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: '700', color: 'var(--color-text-primary)' }}>Permission Management</h1>
         {canCreate && (
           <button
+            type="button"
             onClick={() => setShowModal(true)}
             style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
           >
@@ -79,7 +100,7 @@ function Permissions() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading...</div>
+        <div aria-busy="true" style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading...</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
           {Object.keys(groupedPermissions).length === 0 ? (
@@ -109,6 +130,7 @@ function Permissions() {
                         </div>
                         {canDelete && (
                           <button
+                            type="button"
                             onClick={() => handleDeletePermission(permission.id)}
                             style={{ color: 'var(--color-error)', background: 'none', border: 'none', cursor: 'pointer' }}
                           >
@@ -127,10 +149,13 @@ function Permissions() {
 
       {showModal && (
         <div 
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 'var(--z-modal)' }}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-overlay-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 'var(--z-modal)' }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="permission-modal-title"
         >
-          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', padding: 'var(--spacing-6)', maxWidth: '28rem', width: '100%', margin: 'var(--spacing-4)' }}>
-            <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-4)' }}>
+          <div style={{ backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', padding: 'var(--spacing-6)', maxWidth: '28rem', width: '100%', margin: 'var(--spacing-4)' }}>
+            <h2 id="permission-modal-title" style={{ fontSize: 'var(--font-size-xl)', fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-4)' }}>
               Create New Permission
             </h2>
 
@@ -185,6 +210,7 @@ function Permissions() {
 
             <div style={{ display: 'flex', gap: 'var(--spacing-2)', marginTop: 'var(--spacing-6)' }}>
               <button
+                type="button"
                 onClick={handleCreatePermission}
                 disabled={!newPermission.module || !newPermission.action}
                 style={{ flex: 1, padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: !newPermission.module || !newPermission.action ? 'not-allowed' : 'pointer', opacity: !newPermission.module || !newPermission.action ? 0.5 : 1 }}
@@ -192,6 +218,7 @@ function Permissions() {
                 Create Permission
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setShowModal(false);
                   setNewPermission({ module: '', action: '' });

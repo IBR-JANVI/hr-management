@@ -69,7 +69,7 @@ function Roles() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--spacing-6)' }}>
         {loading ? (
-          <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading...</div>
+          <div aria-busy="true" style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading...</div>
         ) : roles.length === 0 ? (
           <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--color-text-muted)' }}>No roles found</div>
         ) : (
@@ -81,7 +81,7 @@ function Roles() {
                   <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>{role.description}</p>
                 </div>
                 {role.isSuperAdmin && (
-                  <span style={{ padding: 'var(--spacing-1) var(--spacing-2)', fontSize: 'var(--font-size-sm)', backgroundColor: '#9333ea', color: 'white', borderRadius: 'var(--radius-full)' }}>
+                  <span style={{ padding: 'var(--spacing-1) var(--spacing-2)', fontSize: 'var(--font-size-sm)', backgroundColor: 'var(--color-purple-500)', color: 'white', borderRadius: 'var(--radius-full)' }}>
                     Super Admin
                   </span>
                 )}
@@ -126,15 +126,20 @@ function Roles() {
       </div>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 'var(--z-modal)' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', padding: 'var(--spacing-6)', maxWidth: '32rem', width: '100%', margin: 'var(--spacing-4)', maxHeight: '80vh', overflowY: 'auto' }}>
-            <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-4)' }}>
+        <div 
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-overlay-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 'var(--z-modal)' }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="role-modal-title"
+        >
+            <div style={{ backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', padding: 'var(--spacing-6)', maxWidth: '32rem', width: '100%', margin: 'var(--spacing-4)', maxHeight: '80vh', overflowY: 'auto' }}>
+            <h2 id="role-modal-title" style={{ fontSize: 'var(--font-size-xl)', fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-4)' }}>
               Create New Role
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
               <div>
-                <label htmlFor="roleNameId" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="roleNameId" style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: '500', color: 'var(--color-text-secondary)' }}>
                   Role Name
                 </label>
                 <input
@@ -147,7 +152,7 @@ function Roles() {
               </div>
 
               <div>
-                <label htmlFor="roleDescriptionId" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="roleDescriptionId" style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: '500', color: 'var(--color-text-secondary)' }}>
                   Description
                 </label>
                 <textarea
@@ -171,7 +176,7 @@ function Roles() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: '500', color: 'var(--color-text-secondary)', marginBottom: 'var(--spacing-2)' }}>
                   Permissions
                 </label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', maxHeight: '15rem', overflowY: 'auto', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: 'var(--spacing-3)' }}>

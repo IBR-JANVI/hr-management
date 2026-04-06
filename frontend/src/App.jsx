@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -9,30 +8,9 @@ import PendingApprovals from './pages/PendingApprovals';
 import Roles from './pages/Roles';
 import Permissions from './pages/Permissions';
 
-// Layout
 import AdminLayout from './components/layout/AdminLayout';
-
-// Protected Route Component
-function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useSelector((state) => state.auth);
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return children;
-}
-
-// Public Route Component (redirect if authenticated)
-function PublicRoute({ children }) {
-  const { isAuthenticated } = useSelector((state) => state.auth);
-  
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  return children;
-}
+import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
 
 function App() {
   return (
