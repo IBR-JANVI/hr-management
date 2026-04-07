@@ -105,7 +105,7 @@
 
 .moduleCard:hover {
   border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .moduleHeader {
@@ -150,7 +150,7 @@
 }
 
 .selectAllBtn:hover {
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: var(--color-primary-bg-light, rgba(59, 130, 246, 0.1));
 }
 
 .permissionsList {
@@ -192,7 +192,7 @@
 }
 
 .notAvailableText {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   margin-left: var(--spacing-1);
 }

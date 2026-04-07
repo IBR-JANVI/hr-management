@@ -1,21 +1,5 @@
 import styles from '../components/RolePermissionsModal.module.css';
-
-const ALL_ACTIONS = ['create', 'view', 'update', 'delete'];
-
-const ACTION_LABELS = {
-  create: 'Create',
-  view: 'View',
-  update: 'Update',
-  edit: 'Update',
-  delete: 'Delete'
-};
-
-const normalizeAction = (action) => {
-  const normalized = action?.toLowerCase();
-  if (normalized === 'edit') return 'update';
-  if (normalized === 'read') return 'view';
-  return normalized;
-};
+import { normalizeAction } from '../utils/actions';
 
 function ModuleCard({
   moduleName,

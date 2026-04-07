@@ -34,21 +34,21 @@
 }
 
 .filterSelect {
-  padding: 10px 14px;
+  padding: var(--spacing-3) var(--spacing-4);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 120px;
+  min-width: var(--spacing-28, 120px);
 }
 
 .filterSelect:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: var(--focus-ring);
 }
 
 .summaryGrid {

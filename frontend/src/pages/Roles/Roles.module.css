@@ -98,7 +98,7 @@
 
 .badge {
   padding: 4px 10px;
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   font-weight: 500;
   border-radius: 9999px;
   white-space: nowrap;
@@ -234,7 +234,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--color-overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { assignPermissions, fetchRoles } from '../store/slices/roleSlice';
 import useModalFocus from '../hooks/useModalFocus';
 import ModuleCard from './ModuleCard';
+import { normalizeAction } from '../utils/actions';
 import styles from './RolePermissionsModal.module.css';
 
 const ALL_ACTIONS = ['create', 'view', 'update', 'delete'];
@@ -14,13 +15,6 @@ const ACTION_LABELS = {
   update: 'Update',
   edit: 'Update',
   delete: 'Delete'
-};
-
-const normalizeAction = (action) => {
-  const normalized = action?.toLowerCase();
-  if (normalized === 'edit') return 'update';
-  if (normalized === 'read') return 'view';
-  return normalized;
 };
 
 function RolePermissionsModal({ role, permissions, onClose }) {

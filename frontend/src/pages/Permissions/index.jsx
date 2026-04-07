@@ -55,6 +55,7 @@ function Permissions() {
       if (e.key === 'Escape' && showModal) {
         setShowModal(false);
         setNewPermission({ module: '', action: '' });
+        setEditingPermissionId(null);
       }
     };
 
@@ -159,20 +160,20 @@ function Permissions() {
       ) : error ? (
         <div className={styles.errorState}>{error?.message || 'Failed to load permissions'}</div>
       ) : permissionsData && permissionsData.length === 0 ? (
-        <div className={styles.emptyState}>No permissions found</div>
+        <div className={styles.errorState}>No permissions found</div>
       ) : (
         <div className={styles.modulesGrid}>
-          {Object.keys(groupedPermissions).map((module) => (
-            <div key={module} className={styles.moduleCard}>
+          {Object.keys(groupedPermissions).map((moduleName) => (
+            <div key={moduleName} className={styles.moduleCard}>
               <div className={styles.moduleHeader}>
                 <h2 className={styles.moduleTitle}>
-                  {module} Module
+                  {moduleName} Module
                 </h2>
               </div>
               <div className={styles.moduleContent}>
                 <div className={styles.actionsGrid}>
                   {defaultActions.map((action) => {
-                    const permission = groupedPermissions[module]?.find(p => p.action === action);
+                    const permission = groupedPermissions[moduleName]?.find(permissionEntry => permissionEntry.action === action);
                     return (
                       <div
                         key={action}
@@ -194,6 +195,7 @@ function Permissions() {
                                   type="button"
                                   onClick={() => openEditModal(permission)}
                                   className={styles.editButton}
+                                  aria-label="Edit permission"
                                 >
                                   ✎
                                 </button>
@@ -203,6 +205,7 @@ function Permissions() {
                                   type="button"
                                   onClick={() => handleDeletePermission(permission.id)}
                                   className={styles.deleteButton}
+                                  aria-label="Delete permission"
                                 >
                                     ✕
                                   </button>
@@ -212,7 +215,7 @@ function Permissions() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setNewPermission({ module, action });
+                                  setNewPermission({ module: moduleName, action });
                                   setEditingPermissionId(null);
                                   setShowModal(true);
                                 }}

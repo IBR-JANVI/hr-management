@@ -146,31 +146,6 @@ function Users() {
     setPage(1);
   };
 
-  const renderModal = (isOpen, onClose, title, onConfirm, confirmText, children, confirmDisabled = false, isLoading = false) => {
-    if (!isOpen) return null;
-    return (
-      <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <div className={styles.modal} onClick={e => e.stopPropagation()}>
-          <h2 id="modal-title" className={styles.modalTitle}>{title}</h2>
-          <div className={styles.formContainer}>
-            {children}
-          </div>
-          <div className={styles.modalActions}>
-            <button type="button" onClick={onClose} className={styles.cancelButton}>Cancel</button>
-            <button
-              type="button"
-              onClick={onConfirm}
-              disabled={confirmDisabled || isLoading}
-              className={styles.confirmButton}
-            >
-              {isLoading ? 'Loading...' : confirmText}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const getStatusClass = (status) => {
     return status === 'ACTIVE' ? styles.statusActive : status === 'PENDING' ? styles.statusPending : styles.statusRejected;
   };
@@ -315,55 +290,87 @@ function Users() {
         </div>
       )}
 
-      {renderModal(showCreateModal, () => { setShowCreateModal(false); resetForm(); }, 'Create User', handleCreate, 'Create', (
-        <>
-          <div className={styles.formGroup}>
-            <label htmlFor="createName" className={styles.label}>Name *</label>
-            <input ref={firstFocusRef} id="createName" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={`${styles.input} ${formErrors.name ? styles.inputError : ''}`} />
-            {formErrors.name && <span className={styles.errorText}>{formErrors.name}</span>}
+      {showCreateModal && (
+        <div className={styles.overlay} onClick={() => { setShowCreateModal(false); resetForm(); }} role="dialog" aria-modal="true" aria-labelledby="create-user-title">
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <h2 id="create-user-title" className={styles.modalTitle}>Create User</h2>
+            <div className={styles.formContainer}>
+              <div className={styles.formGroup}>
+                <label htmlFor="createName" className={styles.label}>Name *</label>
+                <input ref={firstFocusRef} id="createName" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={`${styles.input} ${formErrors.name ? styles.inputError : ''}`} />
+                {formErrors.name && <span className={styles.errorText}>{formErrors.name}</span>}
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="createEmail" className={styles.label}>Email *</label>
+                <input id="createEmail" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={`${styles.input} ${formErrors.email ? styles.inputError : ''}`} />
+                {formErrors.email && <span className={styles.errorText}>{formErrors.email}</span>}
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="createPassword" className={styles.label}>Password *</label>
+                <input id="createPassword" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className={`${styles.input} ${formErrors.password ? styles.inputError : ''}`} />
+                {formErrors.password && <span className={styles.errorText}>{formErrors.password}</span>}
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Roles *</label>
+                {renderRoleCheckboxes(formData, setFormData)}
+                {formErrors.roleIds && <span className={styles.errorText}>{formErrors.roleIds}</span>}
+              </div>
+            </div>
+            <div className={styles.modalActions}>
+              <button type="button" onClick={() => { setShowCreateModal(false); resetForm(); }} className={styles.cancelButton}>Cancel</button>
+              <button
+                type="button"
+                onClick={handleCreate}
+                disabled={!formData.name || !formData.email || !formData.password || formData.roleIds.length === 0}
+                className={styles.confirmButton}
+              >
+                {actionLoading?.createUser ? 'Loading...' : 'Create'}
+              </button>
+            </div>
           </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="createEmail" className={styles.label}>Email *</label>
-            <input id="createEmail" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={`${styles.input} ${formErrors.email ? styles.inputError : ''}`} />
-            {formErrors.email && <span className={styles.errorText}>{formErrors.email}</span>}
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="createPassword" className={styles.label}>Password *</label>
-            <input id="createPassword" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className={`${styles.input} ${formErrors.password ? styles.inputError : ''}`} />
-            {formErrors.password && <span className={styles.errorText}>{formErrors.password}</span>}
-          </div>
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Roles *</label>
-            {renderRoleCheckboxes(formData, setFormData)}
-            {formErrors.roleIds && <span className={styles.errorText}>{formErrors.roleIds}</span>}
-          </div>
-        </>
-      ), !formData.name || !formData.email || !formData.password || formData.roleIds.length === 0, actionLoading?.createUser)}
+        </div>
+      )}
 
-      {renderModal(showEditModal, () => { setShowEditModal(false); setSelectedUser(null); resetForm(); }, 'Edit User', handleUpdate, 'Update', (
-        <>
-          <div className={styles.formGroup}>
-            <label htmlFor="editName" className={styles.label}>Name *</label>
-            <input id="editName" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={`${styles.input} ${formErrors.name ? styles.inputError : ''}`} />
-            {formErrors.name && <span className={styles.errorText}>{formErrors.name}</span>}
+      {showEditModal && (
+        <div className={styles.overlay} onClick={() => { setShowEditModal(false); setSelectedUser(null); resetForm(); }} role="dialog" aria-modal="true" aria-labelledby="edit-user-title">
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <h2 id="edit-user-title" className={styles.modalTitle}>Edit User</h2>
+            <div className={styles.formContainer}>
+              <div className={styles.formGroup}>
+                <label htmlFor="editName" className={styles.label}>Name *</label>
+                <input id="editName" type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={`${styles.input} ${formErrors.name ? styles.inputError : ''}`} />
+                {formErrors.name && <span className={styles.errorText}>{formErrors.name}</span>}
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="editEmail" className={styles.label}>Email *</label>
+                <input id="editEmail" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={`${styles.input} ${formErrors.email ? styles.inputError : ''}`} />
+                {formErrors.email && <span className={styles.errorText}>{formErrors.email}</span>}
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="editPassword" className={styles.label}>Password <span className={styles.optional}>(leave blank to keep current)</span></label>
+                <input id="editPassword" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className={`${styles.input} ${formErrors.password ? styles.inputError : ''}`} />
+                {formErrors.password && <span className={styles.errorText}>{formErrors.password}</span>}
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Roles *</label>
+                {renderRoleCheckboxes(formData, setFormData)}
+                {formErrors.roleIds && <span className={styles.errorText}>{formErrors.roleIds}</span>}
+              </div>
+            </div>
+            <div className={styles.modalActions}>
+              <button type="button" onClick={() => { setShowEditModal(false); setSelectedUser(null); resetForm(); }} className={styles.cancelButton}>Cancel</button>
+              <button
+                type="button"
+                onClick={handleUpdate}
+                disabled={!formData.name || !formData.email || formData.roleIds.length === 0}
+                className={styles.confirmButton}
+              >
+                {actionLoading?.updateUser ? 'Loading...' : 'Update'}
+              </button>
+            </div>
           </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="editEmail" className={styles.label}>Email *</label>
-            <input id="editEmail" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={`${styles.input} ${formErrors.email ? styles.inputError : ''}`} />
-            {formErrors.email && <span className={styles.errorText}>{formErrors.email}</span>}
-          </div>
-          <div className={styles.formGroup}>
-            <label htmlFor="editPassword" className={styles.label}>Password <span className={styles.optional}>(leave blank to keep current)</span></label>
-            <input id="editPassword" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className={`${styles.input} ${formErrors.password ? styles.inputError : ''}`} />
-            {formErrors.password && <span className={styles.errorText}>{formErrors.password}</span>}
-          </div>
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Roles *</label>
-            {renderRoleCheckboxes(formData, setFormData)}
-            {formErrors.roleIds && <span className={styles.errorText}>{formErrors.roleIds}</span>}
-          </div>
-        </>
-      ), !formData.name || !formData.email || formData.roleIds.length === 0, actionLoading?.updateUser)}
+        </div>
+      )}
 
       <Modal
         isOpen={showDeleteModal}
