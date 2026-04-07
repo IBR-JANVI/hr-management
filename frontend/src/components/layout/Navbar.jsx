@@ -10,14 +10,14 @@ function Navbar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const handleLogoutClick = () => {
-    setShowLogoutModal(true);
+    setIsLogoutModalOpen(true);
   };
 
   const handleConfirmLogout = async () => {
-    setShowLogoutModal(false);
+    setIsLogoutModalOpen(false);
     try {
       await dispatch(logout()).unwrap();
       toast.success('Logged out successfully');
@@ -58,8 +58,8 @@ function Navbar() {
       </div>
 
       <Modal
-        isOpen={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
         onConfirm={handleConfirmLogout}
         title="Logout Confirmation"
         message="Do you want to logout?"

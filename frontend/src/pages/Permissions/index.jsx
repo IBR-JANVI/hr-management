@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { fetchPermissions, fetchModules, createPermission, deletePermission, updatePermission } from '../../store/slices/roleSlice';
 import { canAccess } from '../../utils/permissions';
 import Modal from '../../components/Modal';
+import styles from './Permissions.module.css';
 
 function Permissions() {
   const dispatch = useDispatch();
@@ -129,9 +130,9 @@ function Permissions() {
 
   if (!canAccess('permissions', 'view')) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
-        <div style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>
-          <p style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--spacing-2)' }}>🔒</p>
+      <div className={styles.lockedContainer}>
+        <div className={styles.lockedText}>
+          <p className={styles.lockedIcon}>🔒</p>
           <p>You don't have permission to view this page.</p>
         </div>
       </div>
@@ -139,14 +140,14 @@ function Permissions() {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-6)' }}>
-        <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: '700', color: 'var(--color-text-primary)' }}>Permission Management</h1>
+    <div className={styles.root}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Permission Management</h1>
         {canCreate && (
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
+            className={styles.createButton}
           >
             Create Permission
           </button>
@@ -154,44 +155,44 @@ function Permissions() {
       </div>
 
       {loading ? (
-        <div aria-busy="true" style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading...</div>
+        <div aria-busy="true" className={styles.loadingWrapper}>Loading...</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
+        <div className={styles.modulesGrid}>
           {Object.keys(groupedPermissions).length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>No permissions found</div>
+            <div className={styles.emptyState}>No permissions found</div>
           ) : (
             Object.keys(groupedPermissions).map((module) => (
-              <div key={module} style={{ backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
-                <div style={{ backgroundColor: 'var(--color-bg-secondary)', padding: 'var(--spacing-3) var(--spacing-6)' }}>
-                  <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: '600', color: 'var(--color-text-primary)', textTransform: 'capitalize' }}>
+              <div key={module} className={styles.moduleCard}>
+                <div className={styles.moduleHeader}>
+                  <h2 className={styles.moduleTitle}>
                     {module} Module
                   </h2>
                 </div>
-                <div style={{ padding: 'var(--spacing-6)' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--spacing-4)' }}>
+                <div className={styles.moduleContent}>
+                  <div className={styles.actionsGrid}>
                     {defaultActions.map((action) => {
                       const permission = groupedPermissions[module]?.find(p => p.action === action);
                       return (
                         <div
                           key={action}
-                          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--spacing-3)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)' }}
+                          className={styles.actionItem}
                         >
-                          <div>
-                            <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: '500', color: 'var(--color-text-primary)', textTransform: 'capitalize' }}>
+                          <div className={styles.actionInfo}>
+                            <span className={styles.actionName}>
                               {action}
                             </span>
-                            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', marginLeft: 'var(--spacing-2)' }}>
+                            <span className={styles.actionCount}>
                               ({permission?.roleCount || 0} roles)
                             </span>
                           </div>
-                          <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
+                          <div className={styles.actionButtons}>
                             {permission ? (
                               <>
                                 {canUpdate && (
                                   <button
                                     type="button"
                                     onClick={() => openEditModal(permission)}
-                                    style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}
+                                    className={styles.editButton}
                                   >
                                     ✎
                                   </button>
@@ -200,7 +201,7 @@ function Permissions() {
                                   <button
                                     type="button"
                                     onClick={() => handleDeletePermission(permission.id)}
-                                    style={{ color: 'var(--color-error)', background: 'none', border: 'none', cursor: 'pointer' }}
+                                    className={styles.deleteButton}
                                   >
                                     ✕
                                   </button>
@@ -214,7 +215,7 @@ function Permissions() {
                                   setEditingPermissionId(null);
                                   setShowModal(true);
                                 }}
-                                style={{ color: 'var(--color-success)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--font-size-sm)' }}
+                                className={styles.addButton}
                               >
                                 + Add
                               </button>
@@ -233,19 +234,19 @@ function Permissions() {
 
       {showModal && (
         <div 
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-overlay-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 'var(--z-modal)' }}
+          className={styles.modalOverlay}
           role="dialog"
           aria-modal="true"
           aria-labelledby="permission-modal-title"
         >
-          <div style={{ backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', padding: 'var(--spacing-6)', maxWidth: '28rem', width: '100%', margin: 'var(--spacing-4)' }}>
-            <h2 id="permission-modal-title" style={{ fontSize: 'var(--font-size-xl)', fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-4)' }}>
+          <div className={styles.modal}>
+            <h2 id="permission-modal-title" className={styles.modalTitle}>
               {editingPermissionId ? 'Edit Permission' : 'Create New Permission'}
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+            <div className={styles.formGroup}>
               <div>
-                <label htmlFor="permission-module" style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-700)' }}>
+                <label htmlFor="permission-module" className={styles.label}>
                   Module
                 </label>
                 <input
@@ -254,12 +255,12 @@ function Permissions() {
                   value={newPermission.module}
                   onChange={(e) => setNewPermission({ ...newPermission, module: e.target.value })}
                   placeholder="e.g., users, roles, dashboard"
-                  style={{ marginTop: 'var(--spacing-1)', display: 'block', width: '100%', padding: 'var(--spacing-2) var(--spacing-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
+                  className={styles.input}
                 />
               </div>
 
               <div>
-                <label htmlFor="permission-action" style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-700)' }}>
+                <label htmlFor="permission-action" className={styles.label}>
                   Action
                 </label>
                 <input
@@ -268,22 +269,22 @@ function Permissions() {
                   value={newPermission.action}
                   onChange={(e) => setNewPermission({ ...newPermission, action: e.target.value })}
                   placeholder="e.g., view, create, edit, delete"
-                  style={{ marginTop: 'var(--spacing-1)', display: 'block', width: '100%', padding: 'var(--spacing-2) var(--spacing-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
+                  className={styles.input}
                 />
               </div>
 
-              {modules.length > 0 && (
+              {Array.isArray(modules) && modules.length > 0 && (
                 <div>
-                  <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-700)', marginBottom: 'var(--spacing-2)' }}>
+                  <label className={styles.label}>
                     Existing Modules
                   </label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-2)' }}>
+                  <div className={styles.modulesContainer}>
                     {modules.map((m) => (
                       <button
                         type="button"
                         key={m}
                         onClick={() => setNewPermission({ ...newPermission, module: m })}
-                        style={{ padding: 'var(--spacing-1) var(--spacing-3)', backgroundColor: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-full)', fontSize: 'var(--font-size-sm)', border: 'none', cursor: 'pointer', textTransform: 'capitalize' }}
+                        className={styles.moduleButton}
                       >
                         {m}
                       </button>
@@ -293,19 +294,19 @@ function Permissions() {
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: 'var(--spacing-2)', marginTop: 'var(--spacing-6)' }}>
+            <div className={styles.buttonGroup}>
               <button
                 type="button"
                 onClick={editingPermissionId ? handleUpdatePermission : handleCreatePermission}
                 disabled={!newPermission.module || !newPermission.action}
-                style={{ flex: 1, padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: !newPermission.module || !newPermission.action ? 'not-allowed' : 'pointer', opacity: !newPermission.module || !newPermission.action ? 0.5 : 1 }}
+                className={styles.confirmButton}
               >
                 {editingPermissionId ? 'Update Permission' : 'Create Permission'}
               </button>
               <button
                 type="button"
                 onClick={handleCloseModal}
-                style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
+                className={styles.cancelButton}
               >
                 Cancel
               </button>

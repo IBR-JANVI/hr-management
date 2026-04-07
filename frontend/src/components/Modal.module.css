@@ -118,7 +118,7 @@
   color: var(--color-on-primary);
 }
 
-.primary:hover:not(:disabled) {
+.confirmButton.primary:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
@@ -129,7 +129,7 @@
   color: var(--color-on-error);
 }
 
-.danger:hover:not(:disabled) {
+.confirmButton.danger:hover:not(:disabled) {
   background-color: var(--color-error-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);

@@ -30,7 +30,7 @@ function Dashboard() {
         </div>
         <div className={styles.profileItem}>
           <span className={styles.profileLabel}>Role</span>
-          <span className={styles.profileValue}>{user?.roles?.[0]?.name || 'User'}</span>
+          <span className={styles.profileValue}>{user?.roles?.map(r => r.name).join(', ') || 'User'}</span>
         </div>
         <div className={styles.profileItem}>
           <span className={styles.profileLabel}>Status</span>
@@ -48,7 +48,7 @@ function Dashboard() {
 
   const isLoading = isAdmin && statsLoading;
   const hasError = isAdmin && statsError;
-  const hasNoData = isAdmin && (!stats || (stats.totalUsers === 0 && stats.activeUsers === 0 && stats.pendingUsers === 0 && stats.rejectedUsers === 0));
+  const hasNoData = isAdmin && !statsLoading && (!stats || (stats.totalUsers === 0 && stats.activeUsers === 0 && stats.pendingUsers === 0 && stats.rejectedUsers === 0));
 
   if (isLoading) {
     return (

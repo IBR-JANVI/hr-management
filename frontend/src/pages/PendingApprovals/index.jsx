@@ -13,7 +13,7 @@ function PendingApprovals() {
   const { roles } = useSelector((state) => state.roles);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRoles, setSelectedRoles] = useState([]);
-  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [rejectUserId, setRejectUserId] = useState(null);
   const modalRef = useRef(null);
   const firstFocusableRef = useRef(null);
@@ -97,7 +97,7 @@ function PendingApprovals() {
 
   const handleRejectClick = (id) => {
     setRejectUserId(id);
-    setShowRejectModal(true);
+    setIsRejectModalOpen(true);
   };
 
   const handleConfirmReject = async () => {
@@ -108,13 +108,13 @@ function PendingApprovals() {
     } catch (error) {
       toast.error(error?.error?.message || 'Failed to reject user');
     } finally {
-      setShowRejectModal(false);
+      setIsRejectModalOpen(false);
       setRejectUserId(null);
     }
   };
 
   const handleCancelReject = () => {
-    setShowRejectModal(false);
+    setIsRejectModalOpen(false);
     setRejectUserId(null);
   };
 
@@ -257,7 +257,7 @@ function PendingApprovals() {
       )}
 
       <Modal
-        isOpen={showRejectModal}
+        isOpen={isRejectModalOpen}
         onClose={handleCancelReject}
         onConfirm={handleConfirmReject}
         title="Reject User"
