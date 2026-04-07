@@ -1,0 +1,274 @@
+.lockedContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16rem;
+}
+
+.lockedText {
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.lockedIcon {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--spacing-2);
+}
+
+.root {
+  padding: var(--spacing-6);
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-6);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-6);
+}
+
+.createButton {
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.createButton:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.loadingWrapper {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--spacing-8);
+}
+
+.errorState {
+  text-align: center;
+  color: var(--color-error);
+  padding: var(--spacing-8);
+}
+
+.emptyState {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--spacing-8);
+}
+
+.modulesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.moduleCard {
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.moduleHeader {
+  background-color: var(--color-bg-secondary);
+  padding: var(--spacing-3) var(--spacing-6);
+}
+
+.moduleTitle {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-transform: capitalize;
+}
+
+.moduleContent {
+  padding: var(--spacing-6);
+}
+
+.actionsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-4);
+}
+
+.actionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-3);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.actionInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.actionName {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  text-transform: capitalize;
+}
+
+.actionCount {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-left: var(--spacing-2);
+}
+
+.actionButtons {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.editButton {
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-1);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+}
+
+.deleteButton {
+  color: var(--color-error);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-1);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+}
+
+.addButton {
+  color: var(--color-success);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--color-overlay-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+
+.modal {
+  background-color: var(--color-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-6);
+  max-width: 28rem;
+  width: 100%;
+  margin: var(--spacing-4);
+}
+
+.modalTitle {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-4);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-700);
+}
+
+.input {
+  margin-top: var(--spacing-1);
+  display: block;
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.modulesContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+}
+
+.moduleButton {
+  padding: var(--spacing-1) var(--spacing-3);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  border: none;
+  cursor: pointer;
+  text-transform: capitalize;
+  transition: all 0.2s ease;
+}
+
+.moduleButton:hover {
+  background-color: var(--color-border);
+}
+
+.buttonGroup {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-6);
+}
+
+.confirmButton {
+  flex: 1;
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.confirmButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}

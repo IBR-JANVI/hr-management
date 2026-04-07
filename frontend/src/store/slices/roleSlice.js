@@ -2,8 +2,8 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
 const initialState = {
-  roles: [],
-  permissions: [],
+  roles: null,
+  permissions: null,
   modules: [],
   loadingRoles: false,
   loadingPermissions: false,
@@ -113,6 +113,30 @@ export const deletePermission = createAsyncThunk(
   }
 );
 
+export const updatePermission = createAsyncThunk(
+  'roles/updatePermission',
+  async ({ id, ...permissionData }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(`/permissions/${id}`, permissionData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.data || { message: 'Failed to update permission' });
+    }
+  }
+);
+
+export const assignPermissions = createAsyncThunk(
+  'roles/assignPermissions',
+  async ({ id, permissionIds }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(`/roles/${id}/permissions`, { permissionIds });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.data || { message: 'Failed to assign permissions' });
+    }
+  }
+);
+
 const roleSlice = createSlice({
   name: 'roles',
   initialState,
@@ -132,7 +156,21 @@ const roleSlice = createSlice({
       })
       .addCase(fetchRoles.fulfilled, (state, action) => {
         state.loadingRoles = false;
-        state.roles = action.payload?.roles || action.payload?.data?.roles || [];
+        
+        // Handle different response formats
+        let rolesArr = [];
+        
+        if (action.payload?.roles?.roles) {
+          rolesArr = action.payload.roles.roles;
+        } else if (Array.isArray(action.payload?.roles)) {
+          rolesArr = action.payload.roles;
+        } else if (Array.isArray(action.payload?.data?.roles)) {
+          rolesArr = action.payload.data.roles;
+        } else if (Array.isArray(action.payload?.data)) {
+          rolesArr = action.payload.data;
+        }
+        
+        state.roles = rolesArr;
       })
       .addCase(fetchRoles.rejected, (state, action) => {
         state.loadingRoles = false;
@@ -145,7 +183,12 @@ const roleSlice = createSlice({
       .addCase(createRole.fulfilled, (state, action) => {
         state.loadingCreate = false;
         const role = action.payload?.role || action.payload?.data?.role;
-        if (role) state.roles.push(role);
+        if (role) {
+          if (!state.roles) {
+            state.roles = [];
+          }
+          state.roles.push(role);
+        }
       })
       .addCase(createRole.rejected, (state, action) => {
         state.loadingCreate = false;
@@ -159,6 +202,9 @@ const roleSlice = createSlice({
         state.loadingUpdate = false;
         const role = action.payload?.role || action.payload?.data?.role;
         if (role) {
+          if (!state.roles) {
+            state.roles = [];
+          }
           const index = state.roles.findIndex(existingRole => existingRole.id === role.id);
           if (index !== -1) {
             state.roles[index] = role;
@@ -175,7 +221,9 @@ const roleSlice = createSlice({
       })
       .addCase(deleteRole.fulfilled, (state, action) => {
         state.loadingDelete = false;
-        state.roles = state.roles.filter(role => role.id !== action.payload.id);
+        if (state.roles && Array.isArray(state.roles)) {
+          state.roles = state.roles.filter(role => role.id !== action.payload.id);
+        }
       })
       .addCase(deleteRole.rejected, (state, action) => {
         state.loadingDelete = false;
@@ -187,7 +235,8 @@ const roleSlice = createSlice({
       })
       .addCase(fetchPermissions.fulfilled, (state, action) => {
         state.loadingPermissions = false;
-        state.permissions = action.payload?.permissions || action.payload?.data?.permissions || [];
+        const permissionsArr = action.payload?.permissions?.permissions || [];
+        state.permissions = permissionsArr;
       })
       .addCase(fetchPermissions.rejected, (state, action) => {
         state.loadingPermissions = false;
@@ -213,6 +262,7 @@ const roleSlice = createSlice({
         state.loadingCreate = false;
         const created = action.payload?.permission || action.payload?.data?.permission;
         if (created) {
+          if (!state.permissions) state.permissions = [];
           state.permissions.push(created);
         }
       })
@@ -226,11 +276,42 @@ const roleSlice = createSlice({
       })
       .addCase(deletePermission.fulfilled, (state, action) => {
         state.loadingDelete = false;
+        if (!state.permissions) state.permissions = [];
         state.permissions = state.permissions.filter(permission => permission.id !== action.payload.id);
       })
       .addCase(deletePermission.rejected, (state, action) => {
         state.loadingDelete = false;
         state.errorDelete = action.payload;
+      })
+      .addCase(updatePermission.pending, (state) => {
+        state.loadingUpdate = true;
+        state.errorUpdate = null;
+      })
+      .addCase(updatePermission.fulfilled, (state, action) => {
+        state.loadingUpdate = false;
+        const updated = action.payload?.permission || action.payload?.data?.permission;
+        if (updated) {
+          if (!state.permissions) state.permissions = [];
+          const index = state.permissions.findIndex(permission => permission.id === updated.id);
+          if (index !== -1) {
+            state.permissions[index] = updated;
+          }
+        }
+      })
+      .addCase(updatePermission.rejected, (state, action) => {
+        state.loadingUpdate = false;
+        state.errorUpdate = action.payload;
+      })
+      .addCase(assignPermissions.pending, (state) => {
+        state.loadingUpdate = true;
+        state.errorUpdate = null;
+      })
+      .addCase(assignPermissions.fulfilled, (state, action) => {
+        state.loadingUpdate = false;
+      })
+      .addCase(assignPermissions.rejected, (state, action) => {
+        state.loadingUpdate = false;
+        state.errorUpdate = action.payload;
       });
   }
 });

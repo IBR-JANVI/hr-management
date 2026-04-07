@@ -1,6 +1,8 @@
 :root {
   --color-primary: #3b82f6;
   --color-primary-hover: #2563eb;
+  --color-primary-rgb: 59, 130, 246;
+  --color-primary-bg-light: rgba(59, 130, 246, 0.1);
   --color-secondary: #64748b;
   --color-secondary-hover: #475569;
   --color-success: #22c55e;
@@ -9,6 +11,10 @@
   --color-error: #ef4444;
   --color-error-hover: #dc2626;
   --color-error-bg-light: rgba(239, 68, 68, 0.1);
+  --color-success-bg-light: rgba(34, 197, 94, 0.1);
+  --color-warning-bg-light: rgba(245, 158, 11, 0.1);
+  --color-info-bg-light: rgba(59, 130, 246, 0.1);
+  --color-info: #3b82f6;
   --color-purple-500: #9333ea;
 
   --color-bg-primary: #ffffff;
@@ -33,11 +39,16 @@
   --spacing-2: 0.5rem;
   --spacing-3: 0.75rem;
   --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
   --spacing-6: 1.5rem;
   --spacing-8: 2rem;
+  --spacing-12: 3rem;
+  --spacing-20: 5rem;
+  --spacing-28: 7rem;
   --max-width-md: 28rem;
 
   --font-sans: -apple-system, 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
+  --font-size-xs: 0.75rem;
   --font-size-base: 1rem;
   --font-size-sm: 0.875rem;
   --font-size-lg: 1.125rem;

@@ -1,0 +1,215 @@
+.container {
+  background-color: var(--color-bg-primary);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  padding: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.titleIcon {
+  color: var(--color-primary);
+  width: var(--spacing-5);
+  height: var(--spacing-5);
+}
+
+.filterGroup {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.filterSelect {
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: var(--spacing-28, 120px);
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: var(--color-bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  transition: all 0.2s ease;
+}
+
+.summaryCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.1);
+}
+
+.summaryLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summaryValue {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+.summaryValue.warning {
+  color: var(--color-warning);
+}
+
+.summaryValue.info {
+  color: var(--color-info);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg-primary);
+}
+
+.table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.table tbody tr:hover td {
+  background-color: var(--color-bg-secondary);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.statusPresent {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background-color: var(--color-success-bg-light, rgba(34, 197, 94, 0.1));
+  color: var(--color-success);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusLeave {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background-color: var(--color-warning-bg-light, rgba(245, 158, 11, 0.1));
+  color: var(--color-warning);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusHalfDay {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background-color: var(--color-info-bg-light, rgba(59, 130, 246, 0.1));
+  color: var(--color-primary);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.emptyState,
+.loadingState,
+.errorState {
+  padding: 40px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.errorState {
+  color: var(--color-error);
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filterGroup {
+    width: 100%;
+  }
+  
+  .filterSelect {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .summaryGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .container {
+    padding: 16px;
+  }
+}

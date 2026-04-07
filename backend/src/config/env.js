@@ -14,6 +14,7 @@ const DEFAULT_LOG_LEVEL = 'info';
 const DEFAULT_DB_POOL_SIZE = 10;
 const DEFAULT_JWT_EXPIRES_IN = '15m';
 const DEFAULT_REFRESH_TOKEN_EXPIRES_IN = '7d';
+const DEFAULT_FRONTEND_URL = 'http://localhost:3000';
 
 const getConfig = () => {
   const JWT_SECRET = process.env.JWT_SECRET?.trim();
@@ -54,6 +55,7 @@ const getConfig = () => {
 
   const jwtExpiresIn = process.env.JWT_EXPIRES_IN || DEFAULT_JWT_EXPIRES_IN;
   const refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || DEFAULT_REFRESH_TOKEN_EXPIRES_IN;
+  const frontendUrl = process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL;
   
   return {
     JWT_SECRET,
@@ -68,6 +70,7 @@ const getConfig = () => {
     azureSubscriptionId,
     jwtExpiresIn,
     refreshTokenExpiresIn,
+    frontendUrl,
   };
 };
 

@@ -15,14 +15,23 @@ const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const roleRoutes = require('./routes/role.routes');
 const permissionRoutes = require('./routes/permission.routes');
+const attendanceRoutes = require('./routes/attendance.routes');
 
 dotenv.config();
 
 const app = express();
-const { port: PORT } = getConfig();
+const { port: PORT, frontendUrl } = getConfig();
+
+const corsOptions = {
+  origin: frontendUrl,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
+};
 
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(morgan('dev', {
   stream: {
     write: msg => logger.info(msg.trim())
@@ -34,6 +43,7 @@ app.use(express.urlencoded({ extended: true }));
 const AppError = require('./core/errors/AppError');
 
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/attendance', attendanceRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/roles', roleRoutes);
 app.use('/api/v1/permissions', permissionRoutes);

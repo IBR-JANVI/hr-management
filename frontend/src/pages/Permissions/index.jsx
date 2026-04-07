@@ -1,13 +1,18 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
-import { fetchPermissions, fetchModules, createPermission, deletePermission } from '../../store/slices/roleSlice';
+import { fetchPermissions, fetchModules, createPermission, deletePermission, updatePermission } from '../../store/slices/roleSlice';
 import { canAccess } from '../../utils/permissions';
+import Modal from '../../components/Modal';
+import styles from './Permissions.module.css';
 
 function Permissions() {
   const dispatch = useDispatch();
-  const { permissions, modules, loadingPermissions: loading } = useSelector((state) => state.roles);
+  const { permissions: permissionsData, modules, loadingPermissions: loading, error } = useSelector((state) => state.roles);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePermissionId, setDeletePermissionId] = useState(null);
+  const [editingPermissionId, setEditingPermissionId] = useState(null);
   const [newPermission, setNewPermission] = useState({ module: '', action: '' });
   const modalRef = useRef(null);
   const firstFocusableRef = useRef(null);
@@ -15,17 +20,23 @@ function Permissions() {
   const canCreate = canAccess('permissions', 'create');
   const canDelete = canAccess('permissions', 'delete');
   const canView = canAccess('permissions', 'view');
+  const canUpdate = canAccess('permissions', 'update');
+
+  const defaultActions = ['view', 'create', 'update', 'delete'];
 
   const groupedPermissions = useMemo(() => {
+    if (!permissionsData) {
+      return {};
+    }
     const grouped = {};
-    permissions.forEach((permission) => {
+    permissionsData.forEach((permission) => {
       if (!grouped[permission.module]) {
         grouped[permission.module] = [];
       }
       grouped[permission.module].push(permission);
     });
     return grouped;
-  }, [permissions]);
+  }, [permissionsData]);
 
   useEffect(() => {
     if (canView) {
@@ -44,6 +55,7 @@ function Permissions() {
       if (e.key === 'Escape' && showModal) {
         setShowModal(false);
         setNewPermission({ module: '', action: '' });
+        setEditingPermissionId(null);
       }
     };
 
@@ -70,22 +82,58 @@ function Permissions() {
     }
   };
 
-  const handleDeletePermission = async (id) => {
-    if (window.confirm('Are you sure you want to delete this permission?')) {
+  const handleUpdatePermission = async () => {
+    if (newPermission.module && newPermission.action && editingPermissionId) {
       try {
-        await dispatch(deletePermission(id)).unwrap();
-        toast.success('Permission deleted successfully');
+        await dispatch(updatePermission({ id: editingPermissionId, module: newPermission.module, action: newPermission.action })).unwrap();
+        toast.success('Permission updated successfully');
+        setShowModal(false);
+        setNewPermission({ module: '', action: '' });
+        setEditingPermissionId(null);
       } catch (error) {
-        toast.error(error?.error?.message || 'Failed to delete permission');
+        toast.error(error?.error?.message || 'Failed to update permission');
       }
     }
   };
 
+  const openEditModal = (permission) => {
+    setEditingPermissionId(permission.id);
+    setNewPermission({ module: permission.module, action: permission.action });
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setNewPermission({ module: '', action: '' });
+    setEditingPermissionId(null);
+  };
+
+  const handleDeletePermission = (id) => {
+    setDeletePermissionId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await dispatch(deletePermission(deletePermissionId)).unwrap();
+      toast.success('Permission deleted successfully');
+      setShowDeleteModal(false);
+      setDeletePermissionId(null);
+    } catch (error) {
+      toast.error(error?.error?.message || 'Failed to delete permission');
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeletePermissionId(null);
+  };
+
   if (!canAccess('permissions', 'view')) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
-        <div style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>
-          <p style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--spacing-2)' }}>🔒</p>
+      <div className={styles.lockedContainer}>
+        <div className={styles.lockedText}>
+          <p className={styles.lockedIcon}>🔒</p>
           <p>You don't have permission to view this page.</p>
         </div>
       </div>
@@ -93,14 +141,14 @@ function Permissions() {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-6)' }}>
-        <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: '700', color: 'var(--color-text-primary)' }}>Permission Management</h1>
+    <div className={styles.root}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>Permission Management</h1>
         {canCreate && (
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
+            className={styles.createButton}
           >
             Create Permission
           </button>
@@ -108,82 +156,116 @@ function Permissions() {
       </div>
 
       {loading ? (
-        <div aria-busy="true" style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading...</div>
+        <div aria-busy="true" className={styles.loadingWrapper}>Loading...</div>
+      ) : error ? (
+        <div className={styles.errorState}>{error?.message || 'Failed to load permissions'}</div>
+      ) : permissionsData && permissionsData.length === 0 ? (
+        <div className={styles.emptyState}>No permissions found</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-6)' }}>
-          {Object.keys(groupedPermissions).length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>No permissions found</div>
-          ) : (
-            Object.keys(groupedPermissions).map((module) => (
-              <div key={module} style={{ backgroundColor: 'var(--color-bg-primary)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
-                <div style={{ backgroundColor: 'var(--color-bg-secondary)', padding: 'var(--spacing-3) var(--spacing-6)' }}>
-                  <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: '600', color: 'var(--color-text-primary)', textTransform: 'capitalize' }}>
-                    {module} Module
-                  </h2>
-                </div>
-                <div style={{ padding: 'var(--spacing-6)' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 'var(--spacing-4)' }}>
-                    {groupedPermissions[module].map((permission) => (
+        <div className={styles.modulesGrid}>
+          {Object.keys(groupedPermissions).map((moduleName) => (
+            <div key={moduleName} className={styles.moduleCard}>
+              <div className={styles.moduleHeader}>
+                <h2 className={styles.moduleTitle}>
+                  {moduleName} Module
+                </h2>
+              </div>
+              <div className={styles.moduleContent}>
+                <div className={styles.actionsGrid}>
+                  {defaultActions.map((action) => {
+                    const permission = groupedPermissions[moduleName]?.find(permissionEntry => permissionEntry.action === action);
+                    return (
                       <div
-                        key={permission.id}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--spacing-3)', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-md)' }}
+                        key={action}
+                        className={styles.actionItem}
                       >
-                        <div>
-                          <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: '500', color: 'var(--color-text-primary)', textTransform: 'capitalize' }}>
-                            {permission.action}
+                        <div className={styles.actionInfo}>
+                          <span className={styles.actionName}>
+                            {action}
                           </span>
-                          <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', marginLeft: 'var(--spacing-2)' }}>
-                            ({permission.roleCount} roles)
+                          <span className={styles.actionCount}>
+                            ({permission?.roleCount || 0} roles)
                           </span>
                         </div>
-                        {canDelete && (
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePermission(permission.id)}
-                            style={{ color: 'var(--color-error)', background: 'none', border: 'none', cursor: 'pointer' }}
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                        <div className={styles.actionButtons}>
+                          {permission ? (
+                            <>
+                              {canUpdate && (
+                                <button
+                                  type="button"
+                                  onClick={() => openEditModal(permission)}
+                                  className={styles.editButton}
+                                  aria-label="Edit permission"
+                                >
+                                  ✎
+                                </button>
+                              )}
+                              {canDelete && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeletePermission(permission.id)}
+                                  className={styles.deleteButton}
+                                  aria-label="Delete permission"
+                                >
+                                    ✕
+                                  </button>
+                                )}
+                              </>
+                            ) : canCreate ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setNewPermission({ module: moduleName, action });
+                                  setEditingPermissionId(null);
+                                  setShowModal(true);
+                                }}
+                                className={styles.addButton}
+                              >
+                                + Add
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
-            ))
-          )}
+            ))}
+          </div>
         </div>
       )}
 
       {showModal && (
         <div 
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-overlay-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 'var(--z-modal)' }}
+          className={styles.modalOverlay}
           role="dialog"
           aria-modal="true"
           aria-labelledby="permission-modal-title"
         >
-          <div style={{ backgroundColor: 'var(--color-bg)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', padding: 'var(--spacing-6)', maxWidth: '28rem', width: '100%', margin: 'var(--spacing-4)' }}>
-            <h2 id="permission-modal-title" style={{ fontSize: 'var(--font-size-xl)', fontWeight: '600', color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-4)' }}>
-              Create New Permission
+          <div className={styles.modal}>
+            <h2 id="permission-modal-title" className={styles.modalTitle}>
+              {editingPermissionId ? 'Edit Permission' : 'Create New Permission'}
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+            <div className={styles.formGroup}>
               <div>
-                <label htmlFor="permission-module" style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-700)' }}>
+                <label htmlFor="permission-module" className={styles.label}>
                   Module
                 </label>
                 <input
+                  ref={firstFocusableRef}
                   id="permission-module"
                   type="text"
                   value={newPermission.module}
                   onChange={(e) => setNewPermission({ ...newPermission, module: e.target.value })}
                   placeholder="e.g., users, roles, dashboard"
-                  style={{ marginTop: 'var(--spacing-1)', display: 'block', width: '100%', padding: 'var(--spacing-2) var(--spacing-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
+                  className={styles.input}
                 />
               </div>
 
               <div>
-                <label htmlFor="permission-action" style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-700)' }}>
+                <label htmlFor="permission-action" className={styles.label}>
                   Action
                 </label>
                 <input
@@ -192,22 +274,22 @@ function Permissions() {
                   value={newPermission.action}
                   onChange={(e) => setNewPermission({ ...newPermission, action: e.target.value })}
                   placeholder="e.g., view, create, edit, delete"
-                  style={{ marginTop: 'var(--spacing-1)', display: 'block', width: '100%', padding: 'var(--spacing-2) var(--spacing-3)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}
+                  className={styles.input}
                 />
               </div>
 
-              {modules.length > 0 && (
+              {Array.isArray(modules) && modules.length > 0 && (
                 <div>
-                  <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)', color: 'var(--color-text-700)', marginBottom: 'var(--spacing-2)' }}>
+                  <label className={styles.label}>
                     Existing Modules
                   </label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-2)' }}>
+                  <div className={styles.modulesContainer}>
                     {modules.map((m) => (
                       <button
                         type="button"
                         key={m}
                         onClick={() => setNewPermission({ ...newPermission, module: m })}
-                        style={{ padding: 'var(--spacing-1) var(--spacing-3)', backgroundColor: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-full)', fontSize: 'var(--font-size-sm)', border: 'none', cursor: 'pointer', textTransform: 'capitalize' }}
+                        className={styles.moduleButton}
                       >
                         {m}
                       </button>
@@ -217,22 +299,19 @@ function Permissions() {
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: 'var(--spacing-2)', marginTop: 'var(--spacing-6)' }}>
+            <div className={styles.buttonGroup}>
               <button
                 type="button"
-                onClick={handleCreatePermission}
+                onClick={editingPermissionId ? handleUpdatePermission : handleCreatePermission}
                 disabled={!newPermission.module || !newPermission.action}
-                style={{ flex: 1, padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-primary)', color: 'white', borderRadius: 'var(--radius-md)', border: 'none', cursor: !newPermission.module || !newPermission.action ? 'not-allowed' : 'pointer', opacity: !newPermission.module || !newPermission.action ? 0.5 : 1 }}
+                className={styles.confirmButton}
               >
-                Create Permission
+                {editingPermissionId ? 'Update Permission' : 'Create Permission'}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setShowModal(false);
-                  setNewPermission({ module: '', action: '' });
-                }}
-                style={{ padding: 'var(--spacing-2) var(--spacing-4)', backgroundColor: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer' }}
+                onClick={handleCloseModal}
+                className={styles.cancelButton}
               >
                 Cancel
               </button>
@@ -240,6 +319,17 @@ function Permissions() {
           </div>
         </div>
       )}
+
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Permission"
+        message="Are you sure you want to delete this permission?"
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

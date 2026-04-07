@@ -103,14 +103,15 @@ const getRoleById = async (id) => {
     isDefault: role.isDefault,
     isSuperAdmin: role.isSuperAdmin,
     createdAt: role.createdAt,
-    permissions: role.permissions.map(rp => ({
+    permissions: (role.permissions || []).map(rp => ({
       id: rp.permission.id,
       module: rp.permission.module,
       action: rp.permission.action
     })),
-    userCount: role._count.users
+    userCount: role._count?.users || 0
   };
 };
+
 
 /**
  * @description Create a new role
@@ -124,8 +125,8 @@ const getRoleById = async (id) => {
  * @throws {AppError} 409 - When role name already exists
  */
 const createRole = async ({ name, description, isDefault, permissionIds }) => {
-  if (!Array.isArray(permissionIds) || permissionIds.length === 0) {
-    throw new AppError('Invalid permissions format: permissionIds must be a non-empty array', 400);
+  if (permissionIds && !Array.isArray(permissionIds)) {
+    throw new AppError('Invalid permissions format: permissionIds must be an array', 400);
   }
 
   const existingRole = await prisma.role.findUnique({
@@ -144,16 +145,21 @@ const createRole = async ({ name, description, isDefault, permissionIds }) => {
       });
     }
 
+    const roleData = {
+      name,
+      description,
+      isDefault: isDefault || false,
+      isSuperAdmin: false
+    };
+
+    if (permissionIds && permissionIds.length > 0) {
+      roleData.permissions = {
+        create: permissionIds.map(permissionId => ({ permissionId }))
+      };
+    }
+
     return tx.role.create({
-      data: {
-        name,
-        description,
-        isDefault: isDefault || false,
-        isSuperAdmin: false,
-        permissions: {
-          create: permissionIds.map(permissionId => ({ permissionId }))
-        }
-      },
+      data: roleData,
       include: {
         permissions: {
           include: {
