@@ -187,6 +187,16 @@
   text-transform: capitalize;
 }
 
+.permissionDisabled {
+  opacity: 0.5;
+}
+
+.notAvailableText {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-left: var(--spacing-1);
+}
+
 .footer {
   display: flex;
   justify-content: flex-end;

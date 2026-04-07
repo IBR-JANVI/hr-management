@@ -2,8 +2,7 @@
  * @module attendanceService
  * @description Service layer for attendance management
  */
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 /**
  * @description Get attendance records for a user for a specific month and year

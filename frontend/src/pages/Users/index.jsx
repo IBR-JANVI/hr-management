@@ -172,6 +172,27 @@ function Users() {
     return status === 'ACTIVE' ? styles.statusActive : status === 'PENDING' ? styles.statusPending : styles.statusRejected;
   };
 
+  const renderRoleCheckboxes = (formData, setFormData) => (
+    <div className={styles.rolesContainer}>
+      {Array.isArray(roles) && roles.length > 0 ? roles.map((role) => (
+        <label key={role.id} className={styles.roleCheckbox}>
+          <input
+            type="checkbox"
+            checked={formData.roleIds.includes(role.id)}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setFormData({ ...formData, roleIds: [...formData.roleIds, role.id] });
+              } else {
+                setFormData({ ...formData, roleIds: formData.roleIds.filter(id => id !== role.id) });
+              }
+            }}
+          />
+          <span>{role.name}</span>
+        </label>
+      )) : <span className={styles.noRolesText}>No roles available</span>}
+    </div>
+  );
+
   return (
     <div>
       <div className={styles.header}>
@@ -310,28 +331,11 @@ function Users() {
           </div>
           <div className={styles.formGroup}>
             <label className={styles.label}>Roles *</label>
-            <div className={styles.rolesContainer}>
-              {Array.isArray(roles) && roles.length > 0 ? roles.map((role) => (
-                <label key={role.id} className={styles.roleCheckbox}>
-                  <input
-                    type="checkbox"
-                    checked={formData.roleIds.includes(role.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setFormData({ ...formData, roleIds: [...formData.roleIds, role.id] });
-                      } else {
-                        setFormData({ ...formData, roleIds: formData.roleIds.filter(id => id !== role.id) });
-                      }
-                    }}
-                  />
-                  <span>{role.name}</span>
-                </label>
-              )) : <span className={styles.noRolesText}>No roles available</span>}
-            </div>
+            {renderRoleCheckboxes(formData, setFormData)}
             {formErrors.roleIds && <span className={styles.errorText}>{formErrors.roleIds}</span>}
           </div>
         </>
-      ), !formData.name || !formData.email || !formData.password || formData.roleIds.length === 0)}
+      ), !formData.name || !formData.email || !formData.password || formData.roleIds.length === 0, actionLoading?.createUser)}
 
       {renderModal(showEditModal, () => { setShowEditModal(false); setSelectedUser(null); resetForm(); }, 'Edit User', handleUpdate, 'Update', (
         <>
@@ -352,28 +356,11 @@ function Users() {
           </div>
           <div className={styles.formGroup}>
             <label className={styles.label}>Roles *</label>
-            <div className={styles.rolesContainer}>
-              {Array.isArray(roles) && roles.length > 0 ? roles.map((role) => (
-                <label key={role.id} className={styles.roleCheckbox}>
-                  <input
-                    type="checkbox"
-                    checked={formData.roleIds.includes(role.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setFormData({ ...formData, roleIds: [...formData.roleIds, role.id] });
-                      } else {
-                        setFormData({ ...formData, roleIds: formData.roleIds.filter(id => id !== role.id) });
-                      }
-                    }}
-                  />
-                  <span>{role.name}</span>
-                </label>
-              )) : <span className={styles.noRolesText}>No roles available</span>}
-            </div>
+            {renderRoleCheckboxes(formData, setFormData)}
             {formErrors.roleIds && <span className={styles.errorText}>{formErrors.roleIds}</span>}
           </div>
         </>
-      ), !formData.name || !formData.email || formData.roleIds.length === 0)}
+      ), !formData.name || !formData.email || formData.roleIds.length === 0, actionLoading?.updateUser)}
 
       <Modal
         isOpen={showDeleteModal}

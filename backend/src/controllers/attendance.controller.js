@@ -1,3 +1,7 @@
+/**
+ * @module controllers/attendanceController
+ * @description Handles attendance-related request handlers
+ */
 const catchAsync = require('../core/middleware/asyncHandler');
 const ApiResponse = require('../core/utils/ApiResponse');
 const ApiError = require('../core/errors/AppError');
@@ -6,7 +10,6 @@ const { logger } = require('../config/logger');
 
 const getUserAttendance = catchAsync(async (req, res) => {
   logger.info("[Attendance] Request received for user attendance");
-  logger.info("[Attendance] req.user:", req.user);
   
   const { month, year } = req.query;
   const userId = req.user?.id;
@@ -18,12 +21,27 @@ const getUserAttendance = catchAsync(async (req, res) => {
   
   logger.info("[Attendance] User ID:", userId);
   
-  const monthNum = parseInt(month, 10) || new Date().getMonth() + 1;
-  const yearNum = parseInt(year, 10) || new Date().getFullYear();
-
-  logger.info("[Attendance] Fetching attendance for month:", monthNum, "year:", yearNum);
+  const monthNum = parseInt(month, 10);
+  const yearNum = parseInt(year, 10);
   
-  const records = await attendanceService.getUserAttendance(userId, monthNum, yearNum);
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+  
+  const finalMonth = isNaN(monthNum) ? currentMonth : monthNum;
+  const finalYear = isNaN(yearNum) ? currentYear : yearNum;
+  
+  if (month !== undefined && (isNaN(monthNum) || monthNum < 1 || monthNum > 12)) {
+    return ApiResponse.error(res, 'Invalid month. Must be between 1 and 12.', 400);
+  }
+  
+  if (year !== undefined && (isNaN(yearNum) || yearNum <= 0)) {
+    return ApiResponse.error(res, 'Invalid year. Must be a positive integer.', 400);
+  }
+
+  logger.info("[Attendance] Fetching attendance for month:", finalMonth, "year:", finalYear);
+  
+  const records = await attendanceService.getUserAttendance(userId, finalMonth, finalYear);
 
   logger.info("[Attendance] Found records:", records.length);
   ApiResponse.success(res, { records });
@@ -38,10 +56,25 @@ const getUserAttendanceById = catchAsync(async (req, res) => {
   
   const { month, year } = req.query;
   
-  const monthNum = parseInt(month, 10) || new Date().getMonth() + 1;
-  const yearNum = parseInt(year, 10) || new Date().getFullYear();
+  const monthNum = parseInt(month, 10);
+  const yearNum = parseInt(year, 10);
+  
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+  
+  const finalMonth = isNaN(monthNum) ? currentMonth : monthNum;
+  const finalYear = isNaN(yearNum) ? currentYear : yearNum;
+  
+  if (month !== undefined && (isNaN(monthNum) || monthNum < 1 || monthNum > 12)) {
+    return ApiResponse.error(res, 'Invalid month. Must be between 1 and 12.', 400);
+  }
+  
+  if (year !== undefined && (isNaN(yearNum) || yearNum <= 0)) {
+    return ApiResponse.error(res, 'Invalid year. Must be a positive integer.', 400);
+  }
 
-  const records = await attendanceService.getUserAttendance(userId, monthNum, yearNum);
+  const records = await attendanceService.getUserAttendance(userId, finalMonth, finalYear);
 
   ApiResponse.success(res, { records });
 });

@@ -52,26 +52,6 @@ function Attendance() {
   const getStatusBadge = (status) => {
     const statusClasses = {
       'PRESENT': styles.statusPresent,
-      'LEAVE': styles.statusLeave,
-      'HALF_DAY': styles.statusHalfDay
-    };
-    const statusLabels = {
-      'PRESENT': 'Present',
-      'LEAVE': 'Leave',
-      'HALF_DAY': 'Half Day'
-    };
-    return { className: statusClasses[status], label: statusLabels[status] || status };
-  };
-
-  const summary = getSummary();
-
-  const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 2 + i);
-
-  const tableHeaders = ['Date', 'Clock-in', 'Clock-out', 'Total hours', 'Status'];
-
-  const getStatusBadge = (status) => {
-    const statusClasses = {
-      'PRESENT': styles.statusPresent,
       'FULL_DAY': styles.statusPresent,
       'LEAVE': styles.statusLeave,
       'HALF_DAY': styles.statusHalfDay
@@ -82,8 +62,12 @@ function Attendance() {
       'LEAVE': 'Leave',
       'HALF_DAY': 'Half Day'
     };
-    return statusLabels[status] || status;
+    return { className: statusClasses[status], label: statusLabels[status] || status };
   };
+
+  const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 2 + i);
+
+  const tableHeaders = ['Date', 'Clock-in', 'Clock-out', 'Total hours', 'Status'];
 
   return (
     <div className={styles.container}>
@@ -153,8 +137,8 @@ function Attendance() {
                   <td colSpan={5} className={styles.emptyState}>No attendance records found for this month</td>
                 </tr>
               ) : (
-                attendance?.records?.map((record, index) => (
-                  <tr key={index}>
+                attendance?.records?.map((record) => (
+                  <tr key={record.date}>
                     <td>{formatDate(record.date)}</td>
                     <td>{record.clockIn || '-'}</td>
                     <td>{record.clockOut || '-'}</td>

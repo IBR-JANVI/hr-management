@@ -129,8 +129,7 @@ function RolePermissionsModal({ role, permissions, onClose }) {
 
   const toggleModuleAll = (moduleName, checked) => {
     const modulePerms = getModulePermissions(moduleName);
-    const allActions = ALL_ACTIONS;
-    const permittedModulePerms = modulePerms.filter(p => allActions.includes(normalizeAction(p.action)));
+    const permittedModulePerms = modulePerms.filter(p => ALL_ACTIONS.includes(normalizeAction(p.action)));
     
     if (checked) {
       setRolePermissions(prev => {
@@ -145,16 +144,14 @@ function RolePermissionsModal({ role, permissions, onClose }) {
 
   const isModuleAllChecked = (moduleName) => {
     const modulePerms = getModulePermissions(moduleName);
-    const allActions = ALL_ACTIONS;
-    const permittedModulePerms = modulePerms.filter(p => allActions.includes(normalizeAction(p.action)));
+    const permittedModulePerms = modulePerms.filter(p => ALL_ACTIONS.includes(normalizeAction(p.action)));
     if (permittedModulePerms.length === 0) return false;
     return permittedModulePerms.every(p => rolePermissions.includes(p.id));
   };
 
   const isModuleIndeterminate = (moduleName) => {
     const modulePerms = getModulePermissions(moduleName);
-    const allActions = ALL_ACTIONS;
-    const permittedModulePerms = modulePerms.filter(p => allActions.includes(normalizeAction(p.action)));
+    const permittedModulePerms = modulePerms.filter(p => ALL_ACTIONS.includes(normalizeAction(p.action)));
     if (permittedModulePerms.length === 0) return false;
     const checkedCount = permittedModulePerms.filter(p => rolePermissions.includes(p.id)).length;
     return checkedCount > 0 && checkedCount < permittedModulePerms.length;
@@ -176,16 +173,6 @@ function RolePermissionsModal({ role, permissions, onClose }) {
       setSaving(false);
     }
   };
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
 
   return (
     <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="permissions-modal-title">
@@ -240,10 +227,10 @@ function RolePermissionsModal({ role, permissions, onClose }) {
                       const permission = modulePerms.find(p => normalizeAction(p.action) === action);
                       if (!permission) {
                         return (
-                          <label key={action} className={styles.permissionItem} style={{ opacity: 0.5 }}>
+                          <label key={action} className={`${styles.permissionItem} ${styles.permissionDisabled}`}>
                             <input type="checkbox" disabled />
                             <span className={styles.permissionLabel}>{ACTION_LABELS[action]}</span>
-                            <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', marginLeft: '4px' }}>(not available)</span>
+                            <span className={styles.notAvailableText}>(not available)</span>
                           </label>
                         );
                       }

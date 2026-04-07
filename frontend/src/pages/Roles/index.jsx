@@ -127,7 +127,7 @@ function Roles() {
             }}
             className={styles.createButton}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: 18, height: 18 }}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={styles.buttonIcon}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
             Create Role
@@ -251,6 +251,7 @@ function Roles() {
                 {selectedRole ? 'Update Role' : 'Create Role'}
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setShowModal(false);
                   setNewRole({ name: '', description: '' });
