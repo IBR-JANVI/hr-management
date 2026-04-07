@@ -186,7 +186,7 @@ const userSlice = createSlice({
       })
       .addCase(fetchUserStats.fulfilled, (state, action) => {
         state.statsLoading = false;
-        state.stats = action.payload || action.payload?.data || null;
+        state.stats = action.payload?.data ?? action.payload ?? null;
       })
       .addCase(fetchUserStats.rejected, (state, action) => {
         state.statsLoading = false;
@@ -284,7 +284,7 @@ const userSlice = createSlice({
       })
       .addCase(fetchUserAttendance.fulfilled, (state, action) => {
         state.attendanceLoading = false;
-        state.attendance = action.payload || action.payload?.data || null;
+        state.attendance = action.payload?.data || null;
       })
       .addCase(fetchUserAttendance.rejected, (state, action) => {
         state.attendanceLoading = false;

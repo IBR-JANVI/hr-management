@@ -198,15 +198,6 @@
   color: var(--color-text-muted);
 }
 
-.statLabel {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-}
-
-.noPermissions {
-  color: var(--color-text-muted);
-}
-
 @media (max-width: 640px) {
   .statsGrid {
     grid-template-columns: 1fr;

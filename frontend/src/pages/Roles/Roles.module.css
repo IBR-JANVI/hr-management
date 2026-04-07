@@ -93,12 +93,12 @@
 
 .badgeSuperAdmin {
   background-color: var(--color-purple-500);
-  color: white;
+  color: var(--color-on-primary);
 }
 
 .badgeDefault {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-on-primary);
 }
 
 .sectionTitle {
@@ -157,7 +157,7 @@
 
 .manageButton:hover {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-on-primary);
   border-color: var(--color-primary);
 }
 
@@ -187,7 +187,7 @@
   flex: 1;
   padding: 10px 16px;
   background-color: var(--color-error);
-  color: white;
+  color: var(--color-on-error);
   border-radius: 8px;
   border: none;
   font-size: 14px;
@@ -239,10 +239,10 @@
   margin: var(--spacing-4);
   max-height: 85vh;
   overflow-y: auto;
-  animation: slideIn 0.25s ease;
+  animation: slide-in 0.25s ease;
 }
 
-@keyframes slideIn {
+@keyframes slide-in {
   from { transform: translateY(-20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }

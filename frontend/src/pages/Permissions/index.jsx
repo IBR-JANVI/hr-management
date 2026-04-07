@@ -8,7 +8,6 @@ import Modal from '../../components/Modal';
 function Permissions() {
   const dispatch = useDispatch();
   const { permissions: permissionsData, modules, loadingPermissions: loading } = useSelector((state) => state.roles);
-  console.log("permiss data",permissionsData)
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePermissionId, setDeletePermissionId] = useState(null);
@@ -215,7 +214,7 @@ function Permissions() {
                                   setEditingPermissionId(null);
                                   setShowModal(true);
                                 }}
-                                style={{ color: '#22c55e', background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--font-size-sm)' }}
+                                style={{ color: 'var(--color-success)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--font-size-sm)' }}
                               >
                                 + Add
                               </button>

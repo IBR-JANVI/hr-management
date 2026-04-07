@@ -9,7 +9,36 @@ function Dashboard() {
   const { user } = useSelector((state) => state.auth);
   const { stats, statsLoading, statsError } = useSelector((state) => state.users);
 
-  const isAdmin = user?.roles?.[0]?.name?.toLowerCase() === 'admin' || user?.roles?.[0]?.name?.toLowerCase() === 'super admin';
+  const isAdmin = Array.isArray(user?.roles) && user.roles.some(role => role?.name?.toLowerCase() === 'admin' || role?.name?.toLowerCase() === 'super admin');
+
+  const renderProfilePanel = () => (
+    <div className={styles.panel}>
+      <h2 className={styles.panelHeader}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={styles.panelHeaderIcon} style={{ width: 20, height: 20 }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+        </svg>
+        Your Profile
+      </h2>
+      <div className={styles.profileCard}>
+        <div className={styles.profileItem}>
+          <span className={styles.profileLabel}>Name</span>
+          <span className={styles.profileValue}>{user?.name}</span>
+        </div>
+        <div className={styles.profileItem}>
+          <span className={styles.profileLabel}>Email</span>
+          <span className={styles.profileValue}>{user?.email}</span>
+        </div>
+        <div className={styles.profileItem}>
+          <span className={styles.profileLabel}>Role</span>
+          <span className={styles.profileValue}>{user?.roles?.[0]?.name || 'User'}</span>
+        </div>
+        <div className={styles.profileItem}>
+          <span className={styles.profileLabel}>Status</span>
+          <span className={styles.badge}>Active</span>
+        </div>
+      </div>
+    </div>
+  );
 
   useEffect(() => {
     if (isAdmin) {
@@ -99,32 +128,7 @@ function Dashboard() {
             ))}
           </div>
 
-          <div className={styles.panel}>
-            <h2 className={styles.panelHeader}>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={styles.panelHeaderIcon} style={{ width: 20, height: 20 }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-              </svg>
-              Your Profile
-            </h2>
-            <div className={styles.profileCard}>
-              <div className={styles.profileItem}>
-                <span className={styles.profileLabel}>Name</span>
-                <span className={styles.profileValue}>{user?.name}</span>
-              </div>
-              <div className={styles.profileItem}>
-                <span className={styles.profileLabel}>Email</span>
-                <span className={styles.profileValue}>{user?.email}</span>
-              </div>
-              <div className={styles.profileItem}>
-                <span className={styles.profileLabel}>Role</span>
-                <span className={styles.profileValue}>{user?.roles?.[0]?.name || 'User'}</span>
-              </div>
-              <div className={styles.profileItem}>
-                <span className={styles.profileLabel}>Status</span>
-                <span className={styles.badge}>Active</span>
-              </div>
-            </div>
-          </div>
+          {renderProfilePanel()}
 
           <div className={styles.panel}>
             <h2 className={styles.panelHeader}>
@@ -151,32 +155,7 @@ function Dashboard() {
         </>
       ) : (
         <>
-          <div className={styles.panel}>
-            <h2 className={styles.panelHeader}>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={styles.panelHeaderIcon} style={{ width: 20, height: 20 }}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-              </svg>
-              Your Profile
-            </h2>
-            <div className={styles.profileCard}>
-              <div className={styles.profileItem}>
-                <span className={styles.profileLabel}>Name</span>
-                <span className={styles.profileValue}>{user?.name}</span>
-              </div>
-              <div className={styles.profileItem}>
-                <span className={styles.profileLabel}>Email</span>
-                <span className={styles.profileValue}>{user?.email}</span>
-              </div>
-              <div className={styles.profileItem}>
-                <span className={styles.profileLabel}>Role</span>
-                <span className={styles.profileValue}>{user?.roles?.[0]?.name || 'User'}</span>
-              </div>
-              <div className={styles.profileItem}>
-                <span className={styles.profileLabel}>Status</span>
-                <span className={styles.badge}>Active</span>
-              </div>
-            </div>
-          </div>
+          {renderProfilePanel()}
 
           <div className={styles.panel}>
             <Attendance />

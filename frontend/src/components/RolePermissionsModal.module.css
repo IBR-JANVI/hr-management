@@ -7,10 +7,10 @@
   justify-content: center;
   z-index: var(--z-modal);
   backdrop-filter: blur(2px);
-  animation: fadeIn 0.2s ease;
+  animation: fade-in 0.2s ease;
 }
 
-@keyframes fadeIn {
+@keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
@@ -24,11 +24,11 @@
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.25s ease;
+  animation: slide-in 0.25s ease;
   margin: var(--spacing-4);
 }
 
-@keyframes slideIn {
+@keyframes slide-in {
   from { transform: translateY(-20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
@@ -139,7 +139,7 @@
 }
 
 .selectAllBtn {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   color: var(--color-primary);
   background: none;
   border: none;
@@ -220,7 +220,7 @@
 .saveButton {
   padding: 10px 24px;
   background-color: var(--color-primary);
-  color: white;
+  color: var(--color-on-primary);
   border-radius: 8px;
   border: none;
   font-size: var(--font-size-sm);

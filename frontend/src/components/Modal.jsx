@@ -1,6 +1,70 @@
+import { useEffect, useRef } from 'react';
 import styles from './Modal.module.css';
 
 function Modal({ isOpen, onClose, onConfirm, title = 'Confirm', message, confirmText = 'Yes', cancelText = 'No', variant = 'primary' }) {
+  const modalRef = useRef(null);
+  const previousActiveElement = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      previousActiveElement.current = document.activeElement;
+      document.body.style.overflow = 'hidden';
+      
+      setTimeout(() => {
+        const firstFocusable = modalRef.current?.querySelector('button');
+        if (firstFocusable) {
+          firstFocusable.focus();
+        }
+      }, 0);
+    } else {
+      document.body.style.overflow = '';
+      if (previousActiveElement.current) {
+        previousActiveElement.current.focus();
+      }
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        const focusableElements = modalRef.current?.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        
+        if (!focusableElements || focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const getIcon = () => {
@@ -20,7 +84,7 @@ function Modal({ isOpen, onClose, onConfirm, title = 'Confirm', message, confirm
 
   return (
     <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.modal} ref={modalRef} onClick={(e) => e.stopPropagation()}>
         <div className={`${styles.iconWrapper} ${styles[variant]}`}>
           {getIcon()}
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUserAttendance } from '../store/slices/userSlice';
 import { formatDate } from '../utils/helpers';
@@ -38,15 +38,29 @@ function Attendance() {
     setYear(Number(e.target.value));
   };
 
-  const getSummary = () => {
+  const summary = useMemo(() => {
     if (!attendance?.records) return { totalDays: 0, leaves: 0, halfDays: 0 };
     
     const records = attendance.records;
-    const totalDays = records.filter(r => r.status === 'PRESENT' || r.status === 'FULL_DAY').length;
+    const totalDays = records.filter(r => r.status === 'PRESENT').length;
     const leaves = records.filter(r => r.status === 'LEAVE').length;
     const halfDays = records.filter(r => r.status === 'HALF_DAY').length;
     
     return { totalDays, leaves, halfDays };
+  }, [attendance.records]);
+
+  const getStatusBadge = (status) => {
+    const statusClasses = {
+      'PRESENT': styles.statusPresent,
+      'LEAVE': styles.statusLeave,
+      'HALF_DAY': styles.statusHalfDay
+    };
+    const statusLabels = {
+      'PRESENT': 'Present',
+      'LEAVE': 'Leave',
+      'HALF_DAY': 'Half Day'
+    };
+    return { className: statusClasses[status], label: statusLabels[status] || status };
   };
 
   const summary = getSummary();
@@ -146,9 +160,10 @@ function Attendance() {
                     <td>{record.clockOut || '-'}</td>
                     <td>{record.totalHours || '-'}</td>
                     <td>
-                      <span className={styles[record.status === 'PRESENT' || record.status === 'FULL_DAY' ? 'statusPresent' : record.status === 'LEAVE' ? 'statusLeave' : 'statusHalfDay']}>
-                        {getStatusBadge(record.status)}
-                      </span>
+                      {(() => {
+                        const { className, label } = getStatusBadge(record.status);
+                        return <span className={className}>{label}</span>;
+                      })()}
                     </td>
                   </tr>
                 ))

@@ -105,10 +105,11 @@ function PendingApprovals() {
     try {
       await dispatch(rejectUser(rejectUserId)).unwrap();
       toast.success(`User ${user?.name || 'User'} has been rejected`);
-      setShowRejectModal(false);
-      setRejectUserId(null);
     } catch (error) {
       toast.error(error?.error?.message || 'Failed to reject user');
+    } finally {
+      setShowRejectModal(false);
+      setRejectUserId(null);
     }
   };
 

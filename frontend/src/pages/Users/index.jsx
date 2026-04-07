@@ -178,7 +178,7 @@ function Users() {
         <h1 className={styles.title}>User Management</h1>
         {canCreate && (
           <button type="button" onClick={handleOpenCreate} className={styles.createButton}>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: 18, height: 18 }}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={styles.buttonIcon}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
             Create User
@@ -326,7 +326,7 @@ function Users() {
                   />
                   <span>{role.name}</span>
                 </label>
-              )) : <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>No roles available</span>}
+              )) : <span className={styles.noRolesText}>No roles available</span>}
             </div>
             {formErrors.roleIds && <span className={styles.errorText}>{formErrors.roleIds}</span>}
           </div>
@@ -368,7 +368,7 @@ function Users() {
                   />
                   <span>{role.name}</span>
                 </label>
-              )) : <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>No roles available</span>}
+              )) : <span className={styles.noRolesText}>No roles available</span>}
             </div>
             {formErrors.roleIds && <span className={styles.errorText}>{formErrors.roleIds}</span>}
           </div>

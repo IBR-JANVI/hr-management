@@ -1,3 +1,7 @@
+/**
+ * @module attendance.routes
+ * @description Routes for attendance endpoints
+ */
 const express = require('express');
 const router = express.Router();
 const attendanceController = require('../controllers/attendance.controller');
