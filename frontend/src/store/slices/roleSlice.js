@@ -154,32 +154,6 @@ const roleSlice = createSlice({
         state.loadingRoles = true;
         state.error = null;
       })
-      // .addCase(fetchRoles.fulfilled, (state, action) => {
-      //   state.loadingRoles = false;
-
-      //   console.log('=== FETCH ROLES DEBUG ===');
-      //   console.log('action.payload:', action.payload);
-      //   console.log('action.payload.data:', action.payload?.data);
-      //   console.log('action.payload.roles:', action.payload?.roles);
-
-      //   const payload = action.payload;
-      //         let rolesArr = [];
-      //      if (Array.isArray(payload)) {
-      //     rolesArr = payload;
-      //   }
-      //   else if (payload?.roles) {
-      //     rolesArr = Array.isArray(payload.roles) ? payload.roles : [];
-      //   }
-      //   else if (payload?.data?.roles) {
-      //     rolesArr = Array.isArray(payload.data.roles) ? payload.data.roles : [];
-      //   }
-      //   else if (Array.isArray(payload?.data)) {
-      //     rolesArr = payload.data;
-      //   }
-
-      //   console.log('Final rolesArr:', rolesArr);
-      //   state.roles = rolesArr;
-      // })
       .addCase(fetchRoles.fulfilled, (state, action) => {
         state.loadingRoles = false;
         
@@ -259,32 +233,9 @@ const roleSlice = createSlice({
         state.loadingPermissions = true;
         state.error = null;
       })
-      // .addCase(fetchPermissions.fulfilled, (state, action) => {
-      //   state.loadingPermissions = false;
-      //   const payload = action.payload;
-      //   let permissionsArr = [];
-
-      //   if (payload?.data?.permissions) {
-      //     permissionsArr = Array.isArray(payload.data.permissions) ? payload.data.permissions : payload.data.permissions.permissions || [];
-      //   } else if (payload?.permissions) {
-      //     permissionsArr = Array.isArray(payload.permissions) ? payload.permissions : [];
-      //   } else if (Array.isArray(payload)) {
-      //     permissionsArr = payload;
-      //   }
-
-      //   state.permissions = permissionsArr;
-      // })
       .addCase(fetchPermissions.fulfilled, (state, action) => {
         state.loadingPermissions = false;
-
-        console.log('=== FETCH PERMISSIONS DEBUG ===');
-        console.log('Full payload:', action.payload);
-
-        // ✅ Exact correct mapping
         const permissionsArr = action.payload?.permissions?.permissions || [];
-
-        console.log('Final permissionsArr:', permissionsArr);
-
         state.permissions = permissionsArr;
       })
       .addCase(fetchPermissions.rejected, (state, action) => {
@@ -311,6 +262,7 @@ const roleSlice = createSlice({
         state.loadingCreate = false;
         const created = action.payload?.permission || action.payload?.data?.permission;
         if (created) {
+          if (!state.permissions) state.permissions = [];
           state.permissions.push(created);
         }
       })
@@ -324,6 +276,7 @@ const roleSlice = createSlice({
       })
       .addCase(deletePermission.fulfilled, (state, action) => {
         state.loadingDelete = false;
+        if (!state.permissions) state.permissions = [];
         state.permissions = state.permissions.filter(permission => permission.id !== action.payload.id);
       })
       .addCase(deletePermission.rejected, (state, action) => {
@@ -338,6 +291,7 @@ const roleSlice = createSlice({
         state.loadingUpdate = false;
         const updated = action.payload?.permission || action.payload?.data?.permission;
         if (updated) {
+          if (!state.permissions) state.permissions = [];
           const index = state.permissions.findIndex(permission => permission.id === updated.id);
           if (index !== -1) {
             state.permissions[index] = updated;

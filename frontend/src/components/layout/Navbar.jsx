@@ -19,7 +19,7 @@ function Navbar() {
   const handleConfirmLogout = async () => {
     setShowLogoutModal(false);
     try {
-      await dispatch(logout());
+      await dispatch(logout()).unwrap();
       toast.success('Logged out successfully');
       navigate('/login');
     } catch (error) {

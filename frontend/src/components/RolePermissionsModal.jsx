@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import { assignPermissions, fetchRoles } from '../store/slices/roleSlice';
@@ -25,12 +25,72 @@ function RolePermissionsModal({ role, permissions, onClose }) {
   const dispatch = useDispatch();
   const [rolePermissions, setRolePermissions] = useState([]);
   const [saving, setSaving] = useState(false);
+  const modalRef = useRef(null);
+  const previousFocusRef = useRef(null);
 
   useEffect(() => {
     if (role?.permissions) {
       setRolePermissions(role.permissions.map(p => p.id));
     }
   }, [role]);
+
+  useEffect(() => {
+    if (!role || !permissions) return;
+
+    previousFocusRef.current = document.activeElement;
+    document.body.style.overflow = 'hidden';
+    
+    setTimeout(() => {
+      const firstFocusable = modalRef.current?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (firstFocusable) {
+        firstFocusable.focus();
+      }
+    }, 0);
+
+    return () => {
+      document.body.style.overflow = '';
+      if (previousFocusRef.current) {
+        previousFocusRef.current.focus();
+      }
+    };
+  }, [role, permissions]);
+
+  useEffect(() => {
+    if (!role || !permissions || !modalRef.current) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        const focusableElements = modalRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        
+        if (!focusableElements || focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [role, permissions, onClose]);
 
   const modules = useMemo(() => {
     if (!Array.isArray(permissions)) return {};
@@ -40,10 +100,7 @@ function RolePermissionsModal({ role, permissions, onClose }) {
         moduleMap[permission.module] = [];
       }
       moduleMap[permission.module].push(permission);
-      console.log('Permission:', permission.module, permission.action, permission.id);
     });
-    console.log('All modules:', Object.keys(moduleMap));
-    console.log('Module permissions:', Object.keys(moduleMap).map(m => moduleMap[m].map(p => p.action)));
     return moduleMap;
   }, [permissions]);
 
@@ -132,7 +189,7 @@ function RolePermissionsModal({ role, permissions, onClose }) {
 
   return (
     <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="permissions-modal-title">
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.modal} ref={modalRef} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <div>
             <h2 id="permissions-modal-title" className={styles.title}>

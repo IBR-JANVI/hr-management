@@ -123,6 +123,7 @@ model Attendance {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
+  @@index([date])
   @@map("attendances")
 }
 
@@ -131,5 +132,4 @@ enum AttendanceStatus {
   ABSENT
   LEAVE
   HALF_DAY
-  FULL_DAY
 }

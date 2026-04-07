@@ -243,6 +243,7 @@ function Roles() {
 
             <div className={styles.formActions}>
               <button
+                type="button"
                 onClick={selectedRole ? handleUpdateRole : handleCreateRole}
                 disabled={!newRole.name}
                 className={styles.submitButton}

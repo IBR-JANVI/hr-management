@@ -107,7 +107,8 @@ const getRoleById = async (id) => {
       id: rp.permission.id,
       module: rp.permission.module,
       action: rp.permission.action
-    }))
+    })),
+    userCount: role._count?.users || 0
   };
 };
 
@@ -124,8 +125,8 @@ const getRoleById = async (id) => {
  * @throws {AppError} 409 - When role name already exists
  */
 const createRole = async ({ name, description, isDefault, permissionIds }) => {
-  if (permissionIds && (!Array.isArray(permissionIds) || permissionIds.length === 0)) {
-    throw new AppError('Invalid permissions format: permissionIds must be a non-empty array', 400);
+  if (permissionIds && !Array.isArray(permissionIds)) {
+    throw new AppError('Invalid permissions format: permissionIds must be an array', 400);
   }
 
   const existingRole = await prisma.role.findUnique({

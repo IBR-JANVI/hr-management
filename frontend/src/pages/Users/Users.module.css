@@ -280,7 +280,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-modal);
   backdrop-filter: blur(2px);
 }
 
@@ -294,10 +294,10 @@
   margin: var(--spacing-4);
   max-height: 85vh;
   overflow-y: auto;
-  animation: slideIn 0.25s ease;
+  animation: slide-in 0.25s ease;
 }
 
-@keyframes slideIn {
+@keyframes slide-in {
   from { transform: translateY(-20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
@@ -392,6 +392,16 @@
 .roleCheckbox span {
   font-size: 14px;
   color: var(--color-text-primary);
+}
+
+.noRolesText {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.buttonIcon {
+  width: var(--spacing-4);
+  height: var(--spacing-4);
 }
 
 .modalActions {
