@@ -1,7 +1,9 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import toast from 'react-hot-toast';
 import { assignPermissions, fetchRoles } from '../store/slices/roleSlice';
+import useModalFocus from '../hooks/useModalFocus';
+import ModuleCard from './ModuleCard';
 import styles from './RolePermissionsModal.module.css';
 
 const ALL_ACTIONS = ['create', 'view', 'update', 'delete'];
@@ -26,71 +28,14 @@ function RolePermissionsModal({ role, permissions, onClose }) {
   const [rolePermissions, setRolePermissions] = useState([]);
   const [saving, setSaving] = useState(false);
   const modalRef = useRef(null);
-  const previousFocusRef = useRef(null);
+
+  useModalFocus(modalRef, role && permissions, onClose);
 
   useEffect(() => {
     if (role?.permissions) {
       setRolePermissions(role.permissions.map(p => p.id));
     }
   }, [role]);
-
-  useEffect(() => {
-    if (!role || !permissions) return;
-
-    previousFocusRef.current = document.activeElement;
-    document.body.style.overflow = 'hidden';
-    
-    setTimeout(() => {
-      const firstFocusable = modalRef.current?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-      if (firstFocusable) {
-        firstFocusable.focus();
-      }
-    }, 0);
-
-    return () => {
-      document.body.style.overflow = '';
-      if (previousFocusRef.current) {
-        previousFocusRef.current.focus();
-      }
-    };
-  }, [role, permissions]);
-
-  useEffect(() => {
-    if (!role || !permissions || !modalRef.current) return;
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-        return;
-      }
-
-      if (e.key === 'Tab') {
-        const focusableElements = modalRef.current.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        
-        if (!focusableElements || focusableElements.length === 0) return;
-
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        if (e.shiftKey) {
-          if (document.activeElement === firstElement) {
-            e.preventDefault();
-            lastElement.focus();
-          }
-        } else {
-          if (document.activeElement === lastElement) {
-            e.preventDefault();
-            firstElement.focus();
-          }
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [role, permissions, onClose]);
 
   const modules = useMemo(() => {
     if (!Array.isArray(permissions)) return {};
@@ -106,17 +51,6 @@ function RolePermissionsModal({ role, permissions, onClose }) {
 
   const getModulePermissions = (moduleName) => {
     return modules[moduleName] || [];
-  };
-
-  const getAllModuleActions = (moduleName) => {
-    const modulePerms = getModulePermissions(moduleName);
-    return modulePerms.map(p => normalizeAction(p.action));
-  };
-
-  const hasModulePermission = (moduleName, action) => {
-    const modulePerms = getModulePermissions(moduleName);
-    const permission = modulePerms.find(p => p.action === action);
-    return permission ? rolePermissions.includes(permission.id) : false;
   };
 
   const togglePermission = (permissionId) => {
@@ -197,56 +131,18 @@ function RolePermissionsModal({ role, permissions, onClose }) {
           ) : (
             <div className={styles.modulesGrid}>
               {Object.keys(modules).map(moduleName => (
-                <div key={moduleName} className={styles.moduleCard}>
-                  <div className={styles.moduleHeader}>
-                    <div className={styles.moduleCheckbox}>
-                      <input
-                        type="checkbox"
-                        id={`module-${moduleName}`}
-                        checked={isModuleAllChecked(moduleName)}
-                        ref={el => {
-                          if (el) el.indeterminate = isModuleIndeterminate(moduleName);
-                        }}
-                        onChange={(e) => toggleModuleAll(moduleName, e.target.checked)}
-                      />
-                      <label htmlFor={`module-${moduleName}`} className={styles.moduleName}>
-                        {moduleName}
-                      </label>
-                    </div>
-                    <button
-                      type="button"
-                      className={styles.selectAllBtn}
-                      onClick={() => toggleModuleAll(moduleName, !isModuleAllChecked(moduleName))}
-                    >
-                      {isModuleAllChecked(moduleName) ? 'Deselect All' : 'Select All'}
-                    </button>
-                  </div>
-                  <div className={styles.permissionsList}>
-                    {ALL_ACTIONS.map(action => {
-                      const modulePerms = getModulePermissions(moduleName);
-                      const permission = modulePerms.find(p => normalizeAction(p.action) === action);
-                      if (!permission) {
-                        return (
-                          <label key={action} className={`${styles.permissionItem} ${styles.permissionDisabled}`}>
-                            <input type="checkbox" disabled />
-                            <span className={styles.permissionLabel}>{ACTION_LABELS[action]}</span>
-                            <span className={styles.notAvailableText}>(not available)</span>
-                          </label>
-                        );
-                      }
-                      return (
-                        <label key={action} className={styles.permissionItem}>
-                          <input
-                            type="checkbox"
-                            checked={rolePermissions.includes(permission.id)}
-                            onChange={() => togglePermission(permission.id)}
-                          />
-                          <span className={styles.permissionLabel}>{ACTION_LABELS[action]}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
+                <ModuleCard
+                  key={moduleName}
+                  moduleName={moduleName}
+                  getModulePermissions={getModulePermissions}
+                  ALL_ACTIONS={ALL_ACTIONS}
+                  ACTION_LABELS={ACTION_LABELS}
+                  rolePermissions={rolePermissions}
+                  togglePermission={togglePermission}
+                  isModuleAllChecked={isModuleAllChecked}
+                  isModuleIndeterminate={isModuleIndeterminate}
+                  toggleModuleAll={toggleModuleAll}
+                />
               ))}
             </div>
           )}

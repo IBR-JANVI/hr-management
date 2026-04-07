@@ -47,7 +47,7 @@ function Attendance() {
     const halfDays = records.filter(r => r.status === 'HALF_DAY').length;
     
     return { totalDays, leaves, halfDays };
-  }, [attendance.records]);
+  }, [attendance?.records]);
 
   const getStatusBadge = (status) => {
     const statusClasses = {

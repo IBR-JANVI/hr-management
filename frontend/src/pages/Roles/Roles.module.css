@@ -66,6 +66,14 @@
   border-color: var(--color-border);
 }
 
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+}
+
 .required {
   color: var(--color-error);
 }

@@ -21,14 +21,19 @@ function Roles() {
   const canCreate = canAccess('roles', 'create');
   const canDelete = canAccess('roles', 'delete');
   const canView = canAccess('roles', 'view');
+  const canUpdate = canAccess('roles', 'update');
 
   useEffect(() => {
-    dispatch(fetchRoles());
-  }, [dispatch]);
+    if (canView || canUpdate) {
+      dispatch(fetchRoles());
+    }
+  }, [dispatch, canView, canUpdate]);
 
   useEffect(() => {
-    dispatch(fetchPermissions());
-  }, [dispatch]);
+    if (canUpdate) {
+      dispatch(fetchPermissions());
+    }
+  }, [dispatch, canUpdate]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -174,13 +179,15 @@ function Roles() {
                 </button>
                 {!role.isSuperAdmin && (
                   <div className={styles.actionButtons}>
-                    <button
-                      type="button"
-                      onClick={() => handleEditRole(role)}
-                      className={styles.editButton}
-                    >
-                      Edit
-                    </button>
+                    {canUpdate && (
+                      <button
+                        type="button"
+                        onClick={() => handleEditRole(role)}
+                        className={styles.editButton}
+                      >
+                        Edit
+                      </button>
+                    )}
                     {canDelete && (
                       <button
                         type="button"

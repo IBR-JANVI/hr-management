@@ -139,9 +139,9 @@ function Dashboard() {
             </h2>
             <div className={styles.permissionsWrapper}>
               {user?.permissions && user.permissions.length > 0 ? (
-                user.permissions.map((permission, index) => (
+                user.permissions.map((permission) => (
                   <span
-                    key={index}
+                    key={`${permission.module}-${permission.action}`}
                     className={styles.permissionsTag}
                   >
                     {permission.module}: {permission.action}

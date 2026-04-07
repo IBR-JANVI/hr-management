@@ -113,7 +113,7 @@
   transition: all 0.2s ease;
 }
 
-.primary {
+.confirmButton.primary {
   background-color: var(--color-primary);
   color: var(--color-on-primary);
 }
@@ -124,7 +124,7 @@
   box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
 }
 
-.danger {
+.confirmButton.danger {
   background-color: var(--color-error);
   color: var(--color-on-error);
 }

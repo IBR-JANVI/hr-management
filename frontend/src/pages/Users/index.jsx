@@ -40,8 +40,11 @@ function Users() {
 
   useEffect(() => {
     dispatch(fetchUsers({ page, search: debouncedSearch, status }));
-    dispatch(fetchRoles());
   }, [dispatch, page, debouncedSearch, status]);
+
+  useEffect(() => {
+    dispatch(fetchRoles());
+  }, [dispatch]);
 
   useEffect(() => {
     setPage(1);
@@ -143,7 +146,7 @@ function Users() {
     setPage(1);
   };
 
-  const renderModal = (isOpen, onClose, title, onConfirm, confirmText, children, confirmDisabled = false) => {
+  const renderModal = (isOpen, onClose, title, onConfirm, confirmText, children, confirmDisabled = false, isLoading = false) => {
     if (!isOpen) return null;
     return (
       <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -157,10 +160,10 @@ function Users() {
             <button
               type="button"
               onClick={onConfirm}
-              disabled={confirmDisabled}
+              disabled={confirmDisabled || isLoading}
               className={styles.confirmButton}
             >
-              {confirmText}
+              {isLoading ? 'Loading...' : confirmText}
             </button>
           </div>
         </div>

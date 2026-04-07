@@ -13,8 +13,12 @@ const prisma = require('../lib/prisma');
  * @throws {Error} Prisma client errors
  */
 const getUserAttendance = async (userId, month, year) => {
-  const start = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
-  const end = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+  const now = new Date();
+  const currentMonth = month ? parseInt(month, 10) : now.getMonth() + 1;
+  const currentYear = year ? parseInt(year, 10) : now.getFullYear();
+  
+  const start = new Date(Date.UTC(currentYear, currentMonth - 1, 1, 0, 0, 0, 0));
+  const end = new Date(Date.UTC(currentYear, currentMonth, 0, 23, 59, 59, 999));
 
   const records = await prisma.attendance.findMany({
     where: {
@@ -23,6 +27,13 @@ const getUserAttendance = async (userId, month, year) => {
         gte: start,
         lte: end
       }
+    },
+    select: {
+      date: true,
+      clockIn: true,
+      clockOut: true,
+      totalHours: true,
+      status: true
     },
     orderBy: {
       date: 'asc'
