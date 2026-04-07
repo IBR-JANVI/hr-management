@@ -233,7 +233,6 @@ function Permissions() {
               </div>
             ))}
           </div>
-        </div>
       )}
 
       {showModal && (
