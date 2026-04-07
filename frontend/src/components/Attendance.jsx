@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { formatDate } from '../utils/helpers';
 import styles from './Attendance.module.css';
 
@@ -17,17 +17,19 @@ const MONTHS = [
   { value: 12, label: 'December' }
 ];
 
-function Attendance({ attendance, attendanceLoading, attendanceError }) {
+function Attendance({ attendance, attendanceLoading, attendanceError, month, year, onMonthChange, onYearChange }) {
   const currentDate = new Date();
-  const [month, setMonth] = useState(currentDate.getMonth() + 1);
-  const [year, setYear] = useState(currentDate.getFullYear());
 
   const handleMonthChange = (e) => {
-    setMonth(Number(e.target.value));
+    if (onMonthChange) {
+      onMonthChange(Number(e.target.value));
+    }
   };
 
   const handleYearChange = (e) => {
-    setYear(Number(e.target.value));
+    if (onYearChange) {
+      onYearChange(Number(e.target.value));
+    }
   };
 
   const summary = useMemo(() => {
@@ -61,18 +63,21 @@ function Attendance({ attendance, attendanceLoading, attendanceError }) {
 
   const tableHeaders = ['Date', 'Clock-in', 'Clock-out', 'Total hours', 'Status'];
 
+  const currentMonth = month || currentDate.getMonth() + 1;
+  const currentYear = year || currentDate.getFullYear();
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h2 className={styles.title}>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={styles.titleIcon} style={{ width: 22, height: 22 }}>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={styles.titleIcon}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
           </svg>
           Attendance Details
         </h2>
         <div className={styles.filterGroup}>
           <select
-            value={month}
+            value={currentMonth}
             onChange={handleMonthChange}
             className={styles.filterSelect}
             aria-label="Select month"
@@ -82,7 +87,7 @@ function Attendance({ attendance, attendanceLoading, attendanceError }) {
             ))}
           </select>
           <select
-            value={year}
+            value={currentYear}
             onChange={handleYearChange}
             className={styles.filterSelect}
             aria-label="Select year"

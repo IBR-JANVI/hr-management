@@ -150,7 +150,7 @@
 }
 
 .selectAllBtn:hover {
-  background-color: var(--color-primary-bg-light, rgba(59, 130, 246, 0.1));
+  background-color: var(--color-primary-bg-light);
 }
 
 .permissionsList {

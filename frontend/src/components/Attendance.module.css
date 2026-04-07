@@ -25,6 +25,8 @@
 
 .titleIcon {
   color: var(--color-primary);
+  width: var(--spacing-5);
+  height: var(--spacing-5);
 }
 
 .filterGroup {

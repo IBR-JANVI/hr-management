@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
+
 import { fetchRoles, fetchPermissions, createRole, deleteRole, updateRole } from '../../store/slices/roleSlice';
 import { canAccess } from '../../utils/permissions';
+
 import Modal from '../../components/Modal';
 import RolePermissionsModal from '../../components/RolePermissionsModal';
 import styles from './Roles.module.css';
@@ -40,6 +42,7 @@ function Roles() {
       if (e.key === 'Escape' && showModal) {
         setShowModal(false);
         setNewRole({ name: '', description: '' });
+        setSelectedRole(null);
       }
     };
 
@@ -143,6 +146,8 @@ function Roles() {
       <div className={styles.grid}>
         {loading ? (
           <div className={styles.loading} aria-busy="true">Loading...</div>
+        ) : error ? (
+          <div className={styles.error}>{error.message || 'Failed to load roles'}</div>
         ) : !rolesData || rolesData.length === 0 ? (
           <div className={styles.empty}>No roles found</div>
         ) : (

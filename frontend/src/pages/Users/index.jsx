@@ -24,6 +24,9 @@ function Users() {
   const [selectedUser, setSelectedUser] = useState(null);
   const firstFocusRef = useRef(null);
 
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,16 +42,17 @@ function Users() {
   const canUpdate = canAccess('users', 'update');
 
   useEffect(() => {
+    setPage(1);
+    dispatch(fetchUsers({ page: 1, search: debouncedSearch, status }));
+  }, [debouncedSearch, status]);
+
+  useEffect(() => {
     dispatch(fetchUsers({ page, search: debouncedSearch, status }));
   }, [dispatch, page, debouncedSearch, status]);
 
   useEffect(() => {
     dispatch(fetchRoles());
   }, [dispatch]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, status]);
 
   useEffect(() => {
     if (showCreateModal && firstFocusRef.current) {
@@ -106,7 +110,8 @@ function Users() {
   };
 
   const handleCreate = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || isCreating) return;
+    setIsCreating(true);
     try {
       await dispatch(createUser(formData)).unwrap();
       toast.success('User created successfully');
@@ -114,19 +119,28 @@ function Users() {
       resetForm();
     } catch (err) {
       toast.error(err?.message || 'Failed to create user');
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const handleUpdate = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || isUpdating) return;
+    setIsUpdating(true);
     try {
-      await dispatch(updateUser({ id: selectedUser.id, ...formData })).unwrap();
+      const payload = { id: selectedUser.id, ...formData };
+      if (payload.password === '') {
+        delete payload.password;
+      }
+      await dispatch(updateUser(payload)).unwrap();
       toast.success('User updated successfully');
       setShowEditModal(false);
       setSelectedUser(null);
       resetForm();
     } catch (err) {
       toast.error(err?.message || 'Failed to update user');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -321,10 +335,10 @@ function Users() {
               <button
                 type="button"
                 onClick={handleCreate}
-                disabled={!formData.name || !formData.email || !formData.password || formData.roleIds.length === 0}
+                disabled={!formData.name || !formData.email || !formData.password || formData.roleIds.length === 0 || isCreating}
                 className={styles.confirmButton}
               >
-                {actionLoading?.createUser ? 'Loading...' : 'Create'}
+                {isCreating ? 'Loading...' : 'Create'}
               </button>
             </div>
           </div>
@@ -362,10 +376,10 @@ function Users() {
               <button
                 type="button"
                 onClick={handleUpdate}
-                disabled={!formData.name || !formData.email || formData.roleIds.length === 0}
+                disabled={!formData.name || !formData.email || formData.roleIds.length === 0 || isUpdating}
                 className={styles.confirmButton}
               >
-                {actionLoading?.updateUser ? 'Loading...' : 'Update'}
+                {isUpdating ? 'Loading...' : 'Update'}
               </button>
             </div>
           </div>

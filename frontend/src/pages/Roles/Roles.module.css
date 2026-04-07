@@ -34,7 +34,7 @@
 .createButton:hover {
   background-color: var(--color-primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(var(--color-primary-rgb), 0.3);
 }
 
 .grid {
@@ -44,11 +44,16 @@
 }
 
 .loading,
-.empty {
+.empty,
+.error {
   grid-column: 1 / -1;
   text-align: center;
   color: var(--color-text-muted);
   padding: var(--spacing-8);
+}
+
+.error {
+  color: var(--color-error);
 }
 
 .card {
@@ -87,7 +92,7 @@
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: 4px;
+  margin-bottom: var(--spacing-1);
 }
 
 .cardDescription {
@@ -97,10 +102,10 @@
 }
 
 .badge {
-  padding: 4px 10px;
+  padding: var(--spacing-1) var(--spacing-2);
   font-size: var(--font-size-sm);
   font-weight: 500;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   white-space: nowrap;
 }
 
@@ -129,7 +134,7 @@
 }
 
 .permissionTag {
-  padding: 4px 10px;
+  padding: var(--spacing-1) var(--spacing-2);
   background-color: var(--color-bg-secondary);
   color: var(--color-text-primary);
   border-radius: var(--radius-sm);
@@ -138,7 +143,7 @@
 }
 
 .morePermissions {
-  padding: 4px 10px;
+  padding: var(--spacing-1) var(--spacing-2);
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
@@ -298,7 +303,7 @@
 .textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
 }
 
 .textarea {

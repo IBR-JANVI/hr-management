@@ -2,6 +2,7 @@
   --color-primary: #3b82f6;
   --color-primary-hover: #2563eb;
   --color-primary-rgb: 59, 130, 246;
+  --color-primary-bg-light: rgba(59, 130, 246, 0.1);
   --color-secondary: #64748b;
   --color-secondary-hover: #475569;
   --color-success: #22c55e;

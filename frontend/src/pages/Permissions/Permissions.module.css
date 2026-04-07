@@ -60,6 +60,12 @@
   padding: var(--spacing-8);
 }
 
+.emptyState {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--spacing-8);
+}
+
 .modulesGrid {
   display: flex;
   flex-direction: column;

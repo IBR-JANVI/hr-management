@@ -95,6 +95,8 @@
 
 .panelHeaderIcon {
   color: var(--color-primary);
+  width: var(--spacing-5);
+  height: var(--spacing-5);
 }
 
 .profileCard {
@@ -208,6 +210,6 @@
   }
   
   .panel {
-    padding: 20px;
+    padding: var(--spacing-5);
   }
 }
