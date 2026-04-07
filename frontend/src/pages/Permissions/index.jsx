@@ -8,7 +8,7 @@ import styles from './Permissions.module.css';
 
 function Permissions() {
   const dispatch = useDispatch();
-  const { permissions: permissionsData, modules, loadingPermissions: loading } = useSelector((state) => state.roles);
+  const { permissions: permissionsData, modules, loadingPermissions: loading, error } = useSelector((state) => state.roles);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePermissionId, setDeletePermissionId] = useState(null);
@@ -156,53 +156,54 @@ function Permissions() {
 
       {loading ? (
         <div aria-busy="true" className={styles.loadingWrapper}>Loading...</div>
+      ) : error ? (
+        <div className={styles.errorState}>{error?.message || 'Failed to load permissions'}</div>
+      ) : permissionsData && permissionsData.length === 0 ? (
+        <div className={styles.emptyState}>No permissions found</div>
       ) : (
         <div className={styles.modulesGrid}>
-          {Object.keys(groupedPermissions).length === 0 ? (
-            <div className={styles.emptyState}>No permissions found</div>
-          ) : (
-            Object.keys(groupedPermissions).map((module) => (
-              <div key={module} className={styles.moduleCard}>
-                <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>
-                    {module} Module
-                  </h2>
-                </div>
-                <div className={styles.moduleContent}>
-                  <div className={styles.actionsGrid}>
-                    {defaultActions.map((action) => {
-                      const permission = groupedPermissions[module]?.find(p => p.action === action);
-                      return (
-                        <div
-                          key={action}
-                          className={styles.actionItem}
-                        >
-                          <div className={styles.actionInfo}>
-                            <span className={styles.actionName}>
-                              {action}
-                            </span>
-                            <span className={styles.actionCount}>
-                              ({permission?.roleCount || 0} roles)
-                            </span>
-                          </div>
-                          <div className={styles.actionButtons}>
-                            {permission ? (
-                              <>
-                                {canUpdate && (
-                                  <button
-                                    type="button"
-                                    onClick={() => openEditModal(permission)}
-                                    className={styles.editButton}
-                                  >
-                                    ✎
-                                  </button>
-                                )}
-                                {canDelete && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeletePermission(permission.id)}
-                                    className={styles.deleteButton}
-                                  >
+          {Object.keys(groupedPermissions).map((module) => (
+            <div key={module} className={styles.moduleCard}>
+              <div className={styles.moduleHeader}>
+                <h2 className={styles.moduleTitle}>
+                  {module} Module
+                </h2>
+              </div>
+              <div className={styles.moduleContent}>
+                <div className={styles.actionsGrid}>
+                  {defaultActions.map((action) => {
+                    const permission = groupedPermissions[module]?.find(p => p.action === action);
+                    return (
+                      <div
+                        key={action}
+                        className={styles.actionItem}
+                      >
+                        <div className={styles.actionInfo}>
+                          <span className={styles.actionName}>
+                            {action}
+                          </span>
+                          <span className={styles.actionCount}>
+                            ({permission?.roleCount || 0} roles)
+                          </span>
+                        </div>
+                        <div className={styles.actionButtons}>
+                          {permission ? (
+                            <>
+                              {canUpdate && (
+                                <button
+                                  type="button"
+                                  onClick={() => openEditModal(permission)}
+                                  className={styles.editButton}
+                                >
+                                  ✎
+                                </button>
+                              )}
+                              {canDelete && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeletePermission(permission.id)}
+                                  className={styles.deleteButton}
+                                >
                                     ✕
                                   </button>
                                 )}
@@ -227,8 +228,8 @@ function Permissions() {
                   </div>
                 </div>
               </div>
-            ))
-          )}
+            ))}
+          </div>
         </div>
       )}
 
@@ -250,6 +251,7 @@ function Permissions() {
                   Module
                 </label>
                 <input
+                  ref={firstFocusableRef}
                   id="permission-module"
                   type="text"
                   value={newPermission.module}

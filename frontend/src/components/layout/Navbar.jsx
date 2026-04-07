@@ -21,9 +21,10 @@ function Navbar() {
     try {
       await dispatch(logout()).unwrap();
       toast.success('Logged out successfully');
-      navigate('/login');
     } catch (error) {
       toast.error('Failed to logout. Please try again.');
+    } finally {
+      navigate('/login');
     }
   };
 
