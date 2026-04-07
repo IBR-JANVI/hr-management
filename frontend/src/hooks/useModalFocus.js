@@ -1,5 +1,39 @@
 import { useEffect, useRef } from 'react';
 
+const isFocusable = (element) => {
+  if (!element) return false;
+  
+  if (element.hasAttribute('disabled')) return false;
+  if (element.hasAttribute('aria-hidden') && element.getAttribute('aria-hidden') === 'true') return false;
+  if (element.hasAttribute('hidden')) return false;
+  
+  const tabIndex = element.getAttribute('tabindex');
+  if (tabIndex !== null && tabIndex === '-1') return false;
+  
+  const style = window.getComputedStyle(element);
+  if (style.display === 'none' || style.visibility === 'hidden') return false;
+  
+  if (element.offsetParent === null) return false;
+  
+  try {
+    const rects = element.getClientRects();
+    if (rects.length === 0) return false;
+  } catch (e) {
+    return false;
+  }
+  
+  return true;
+};
+
+const getFocusableElements = (container) => {
+  if (!container) return [];
+  
+  const selectors = 'button, [href], input, select, textarea, [tabindex]';
+  const elements = container.querySelectorAll(selectors);
+  
+  return Array.from(elements).filter(isFocusable);
+};
+
 const useModalFocus = (modalRef, isOpen, onClose) => {
   const previousFocusRef = useRef(null);
   const focusTimeoutRef = useRef(null);
@@ -12,7 +46,8 @@ const useModalFocus = (modalRef, isOpen, onClose) => {
     document.body.style.overflow = 'hidden';
     
     focusTimeoutRef.current = setTimeout(() => {
-      const firstFocusable = modalRef.current?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      const focusableElements = getFocusableElements(modalRef.current);
+      const firstFocusable = focusableElements.length > 0 ? focusableElements[0] : null;
       if (firstFocusable) {
         firstFocusable.focus();
       }
@@ -39,9 +74,7 @@ const useModalFocus = (modalRef, isOpen, onClose) => {
       }
 
       if (e.key === 'Tab') {
-        const focusableElements = modalRef.current.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
+        const focusableElements = getFocusableElements(modalRef.current);
         
         if (!focusableElements || focusableElements.length === 0) return;
 

@@ -103,8 +103,8 @@ function RolePermissionsModal({ role, permissions, onClose }) {
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="permissions-modal-title">
-      <div className={styles.modal} ref={modalRef} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} ref={modalRef} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="permissions-modal-title">
         <div className={styles.header}>
           <div>
             <h2 id="permissions-modal-title" className={styles.title}>

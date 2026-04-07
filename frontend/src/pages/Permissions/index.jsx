@@ -160,7 +160,7 @@ function Permissions() {
       ) : error ? (
         <div className={styles.errorState}>{error?.message || 'Failed to load permissions'}</div>
       ) : permissionsData && permissionsData.length === 0 ? (
-        <div className={styles.errorState}>No permissions found</div>
+        <div className={styles.emptyState}>No permissions found</div>
       ) : (
         <div className={styles.modulesGrid}>
           {Object.keys(groupedPermissions).map((moduleName) => (

@@ -1,4 +1,4 @@
-import styles from '../components/RolePermissionsModal.module.css';
+import styles from '../components/ModuleCard.module.css';
 import { normalizeAction } from '../utils/actions';
 
 function ModuleCard({
