@@ -1,15 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchUserStats } from '../../store/slices/userSlice';
+import { fetchUserStats, fetchUserAttendance } from '../../store/slices/userSlice';
 import Attendance from '../../components/Attendance';
 import styles from './Dashboard.module.css';
 
 function Dashboard() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { stats, statsLoading, statsError } = useSelector((state) => state.users);
+  const { stats, statsLoading, statsError, attendance, attendanceLoading, attendanceError } = useSelector((state) => state.users);
+  const [currentDate] = useState(() => new Date());
 
   const isAdmin = Array.isArray(user?.roles) && user.roles.some(role => role?.name?.toLowerCase() === 'admin' || role?.name?.toLowerCase() === 'super admin');
+
+  const [month, setMonth] = useState(currentDate.getMonth() + 1);
+  const [year, setYear] = useState(currentDate.getFullYear());
 
   const renderProfilePanel = () => (
     <div className={styles.panel}>
@@ -46,9 +50,13 @@ function Dashboard() {
     }
   }, [dispatch, isAdmin]);
 
+  useEffect(() => {
+    dispatch(fetchUserAttendance({ month, year }));
+  }, [dispatch, month, year]);
+
   const isLoading = isAdmin && statsLoading;
   const hasError = isAdmin && statsError;
-  const hasNoData = isAdmin && !statsLoading && (!stats || (stats.totalUsers === 0 && stats.activeUsers === 0 && stats.pendingUsers === 0 && stats.rejectedUsers === 0));
+  const hasNoData = isAdmin && !statsLoading && stats !== null && stats.totalUsers === 0 && stats.activeUsers === 0 && stats.pendingUsers === 0 && stats.rejectedUsers === 0;
 
   if (isLoading) {
     return (
@@ -158,7 +166,11 @@ function Dashboard() {
           {renderProfilePanel()}
 
           <div className={styles.panel}>
-            <Attendance />
+            <Attendance 
+              attendance={attendance} 
+              attendanceLoading={attendanceLoading} 
+              attendanceError={attendanceError} 
+            />
           </div>
         </>
       )}

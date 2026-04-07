@@ -13,16 +13,22 @@ const validateAttendanceQuery = (req, res, next) => {
   const { month, year } = req.query;
   
   if (month !== undefined) {
-    const monthNum = parseInt(month, 10);
-    if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
-      return res.status(400).json(ApiResponse.error({ message: 'Invalid month. Must be between 1 and 12.', code: 'INVALID_INPUT' }));
+    if (!/^\d+$/.test(month)) {
+      return ApiResponse.error(res, { message: 'Invalid month. Must be a numeric value.', code: 'INVALID_INPUT' }, 400);
+    }
+    const monthNum = Number(month);
+    if (!Number.isInteger(monthNum) || monthNum < 1 || monthNum > 12) {
+      return ApiResponse.error(res, { message: 'Invalid month. Must be between 1 and 12.', code: 'INVALID_INPUT' }, 400);
     }
   }
   
   if (year !== undefined) {
-    const yearNum = parseInt(year, 10);
-    if (isNaN(yearNum) || yearNum <= 0) {
-      return res.status(400).json(ApiResponse.error({ message: 'Invalid year. Must be a positive integer.', code: 'INVALID_INPUT' }));
+    if (!/^\d+$/.test(year)) {
+      return ApiResponse.error(res, { message: 'Invalid year. Must be a numeric value.', code: 'INVALID_INPUT' }, 400);
+    }
+    const yearNum = Number(year);
+    if (!Number.isInteger(yearNum) || yearNum <= 0) {
+      return ApiResponse.error(res, { message: 'Invalid year. Must be a positive integer.', code: 'INVALID_INPUT' }, 400);
     }
   }
   
@@ -33,7 +39,7 @@ const validateUserIdParam = (req, res, next) => {
   const { userId } = req.params;
   
   if (!userId || typeof userId !== 'string' || userId.trim() === '') {
-    return res.status(400).json(ApiResponse.error({ message: 'User ID is required', code: 'INVALID_INPUT' }));
+    return ApiResponse.error(res, { message: 'User ID is required', code: 'INVALID_INPUT' }, 400);
   }
   
   next();

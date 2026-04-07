@@ -1,15 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 const useModalFocus = (modalRef, isOpen, onClose) => {
-  const previousFocusRef = { current: null };
+  const previousFocusRef = useRef(null);
+  const focusTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) return;
 
+    const previousOverflow = document.body.style.overflow;
     previousFocusRef.current = document.activeElement;
     document.body.style.overflow = 'hidden';
     
-    setTimeout(() => {
+    focusTimeoutRef.current = setTimeout(() => {
       const firstFocusable = modalRef.current?.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
       if (firstFocusable) {
         firstFocusable.focus();
@@ -17,7 +19,10 @@ const useModalFocus = (modalRef, isOpen, onClose) => {
     }, 0);
 
     return () => {
-      document.body.style.overflow = '';
+      if (focusTimeoutRef.current) {
+        clearTimeout(focusTimeoutRef.current);
+      }
+      document.body.style.overflow = previousOverflow || '';
       if (previousFocusRef.current) {
         previousFocusRef.current.focus();
       }

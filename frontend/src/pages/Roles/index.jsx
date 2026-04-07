@@ -170,13 +170,15 @@ function Roles() {
               </p>
 
               <div className={styles.cardActions}>
-                <button
-                  type="button"
-                  onClick={() => handleManagePermissions(role)}
-                  className={styles.manageButton}
-                >
-                  Manage Permissions
-                </button>
+                {canUpdate && (
+                  <button
+                    type="button"
+                    onClick={() => handleManagePermissions(role)}
+                    className={styles.manageButton}
+                  >
+                    Manage Permissions
+                  </button>
+                )}
                 {!role.isSuperAdmin && (
                   <div className={styles.actionButtons}>
                     {canUpdate && (

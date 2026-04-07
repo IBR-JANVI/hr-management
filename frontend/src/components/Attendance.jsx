@@ -1,6 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchUserAttendance } from '../store/slices/userSlice';
+import { useState, useMemo } from 'react';
 import { formatDate } from '../utils/helpers';
 import styles from './Attendance.module.css';
 
@@ -19,16 +17,10 @@ const MONTHS = [
   { value: 12, label: 'December' }
 ];
 
-function Attendance() {
-  const dispatch = useDispatch();
-  const { attendance, attendanceLoading, attendanceError } = useSelector((state) => state.users);
+function Attendance({ attendance, attendanceLoading, attendanceError }) {
   const currentDate = new Date();
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
   const [year, setYear] = useState(currentDate.getFullYear());
-
-  useEffect(() => {
-    dispatch(fetchUserAttendance({ month, year }));
-  }, [dispatch, month, year]);
 
   const handleMonthChange = (e) => {
     setMonth(Number(e.target.value));
@@ -42,7 +34,7 @@ function Attendance() {
     if (!attendance?.records) return { totalDays: 0, leaves: 0, halfDays: 0 };
     
     const records = attendance.records;
-    const totalDays = records.filter(r => r.status === 'PRESENT').length;
+    const totalDays = records.filter(r => r.status === 'PRESENT' || r.status === 'FULL_DAY').length;
     const leaves = records.filter(r => r.status === 'LEAVE').length;
     const halfDays = records.filter(r => r.status === 'HALF_DAY').length;
     

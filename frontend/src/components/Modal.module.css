@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--color-overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -20,12 +20,11 @@
 
 .modal {
   background-color: var(--color-bg-primary);
-  border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  padding: 24px;
-  min-width: 360px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-6);
+  width: clamp(280px, 90%, 420px);
   max-width: 420px;
-  width: 90%;
   animation: slide-in 0.25s ease;
 }
 
@@ -35,11 +34,11 @@
 }
 
 .title {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: 12px;
-  padding-right: 32px;
+  margin-bottom: var(--spacing-3);
+  padding-right: var(--spacing-8);
 }
 
 .iconWrapper {
